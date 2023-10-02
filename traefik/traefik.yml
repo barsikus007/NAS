@@ -1,0 +1,38 @@
+log:
+  level: DEBUG
+api:
+  # Enables the web UI and tells Traefik to listen to docker
+  insecure: true  # TODO switch when ready
+providers:
+  docker:
+    exposedByDefault: false
+  file:
+    filename: /etc/traefik/nextcloud.yml # Adjust the path according your needs.
+    watch: true
+# This whole section is dedicated to options, keyed by entry point, that will apply only to HTTP routing.
+entryPoints:
+  web:
+    address: :80
+    http:
+      redirections:
+        entryPoint:
+          to: webSecure
+          scheme: https
+          permanent: true
+  # Traefik will listen to incoming request on the port 443 (https)
+  webSecure:
+    address: :443
+    http:
+      tls:
+        certResolver: ddnsResolver
+certificatesResolvers:
+  # Enable a dns challenge named "ddnsResolver"
+  ddnsResolver:
+    acme:
+      dnsChallenge:
+        # Tell which provider to use
+        provider: duckdns
+        # caserver: https://acme-staging-v02.api.letsencrypt.org/directory
+      # The email to provide to let's encrypt
+      # Tell to store the certificate on a path under our volume
+      storage: /letsencrypt/acme.json

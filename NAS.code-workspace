@@ -11,7 +11,9 @@
 	"extensions": {
 		"recommendations": [
 			"ms-azuretools.vscode-docker",
-			"davidanson.vscode-markdownlint"
+			"davidanson.vscode-markdownlint",
+			"yzhang.markdown-all-in-one",
+			"bierner.github-markdown-preview"
 		]
 	}
 }

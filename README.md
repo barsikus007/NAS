@@ -1,6 +1,7 @@
 # NAS
 
 Copy `example.env` to `.env` and edit
+Copy `apps/` to your folder specified in `APPDATA_VOLUME` env var
 Use `docker compose up -d --build to start`
 
 ## TODO
@@ -13,13 +14,18 @@ Use `docker compose up -d --build to start`
   - heatsink or microfan on cpu
   - RTC battery
 - software
-  - https fuck
+  - www redir traefik
   - ldap
+    - organizr ldap
   - /tank/docker
 - software late
   - plex vs jellyfin
   - jackett vs <https://github.com/sergiotapia/magnetissimo>
   - <https://github.com/ramanlabs-in/hachi>
+    - probably, on client with webdav
+  - fail2ban
+    - organizr
+    - ldap
 - publication late
   - device specific section in readme
   - pin versions
