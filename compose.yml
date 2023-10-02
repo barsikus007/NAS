@@ -1,0 +1,83 @@
+services:
+  traefik:
+    # The official v2 Traefik docker image
+    image: traefik:latest
+    container_name: traefik
+    command:
+      - --log.level=DEBUG
+      # Enables the web UI and tells Traefik to listen to docker
+      - --api.insecure=true  # TODO switch when ready
+      - --providers.docker=true
+      - --providers.docker.exposedbydefault=false
+      # This whole section is dedicated to options, keyed by entry point, that will apply only to HTTP routing.
+      - --entrypoints.web.address=:80
+      - --entrypoints.web.http.redirections.entryPoint.to=websecure
+      - --entrypoints.web.http.redirections.entryPoint.scheme=https
+      - --entrypoints.web.http.redirections.entrypoint.permanent=true
+      # Traefik will listen to incoming request on the port 443 (https)
+      - --entrypoints.websecure.address=:443
+      # Enable a dns challenge named "ddnsresolver"
+      - --certificatesresolvers.ddnsresolver.acme.dnschallenge=true
+      # Tell which provider to use
+      - --certificatesresolvers.ddnsresolver.acme.dnschallenge.provider=duckdns
+      # - --certificatesresolvers.ddnsresolver.acme.caserver=https://acme-staging-v02.api.letsencrypt.org/directory
+      # The email to provide to let's encrypt
+      - --certificatesresolvers.ddnsresolver.acme.email=${HOST_EMAIL}
+      # Tell to store the certificate on a path under our volume
+      - --certificatesresolvers.ddnsresolver.acme.storage=/letsencrypt/acme.json
+
+      - --entrypoints.websecure.http.tls.certResolver=ddnsresolver
+      - --entrypoints.websecure.http.tls.domains[0].main=${HOST}
+      - --entrypoints.websecure.http.tls.domains[0].sans=*.${HOST}
+    ports:
+      # The HTTP port
+      - "80:80"
+      # The HTTPS port
+      - "443:443"
+      # The Web UI (enabled by --api.insecure=true)
+      - "8080:8080"  # TODO switch when ready or map to local or secure global
+    environment:
+      - DUCKDNS_TOKEN=${DUCKDNS_TOKEN}
+    volumes:
+      # Create a letsencrypt dir within the folder where the docker-compose file is
+      - /tank/data/letsencrypt/:/letsencrypt/
+      # So that Traefik can listen to the Docker events
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+
+  whoami:
+    image: traefik/whoami:latest
+    container_name: whoami
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.whoami.rule=Host(`whoami.${HOST}`)"
+      - "traefik.http.routers.whoami.entrypoints=websecure"
+      - "traefik.http.routers.whoami.tls.certresolver=ddnsresolver"  # Uses the Host rule to define which certificate to issue
+    depends_on:
+      - traefik
+
+# <LocalServices>
+  samba:
+    image: crazymax/samba:4.18.5
+    container_name: samba
+    hostname: docker_samba
+    network_mode: host
+    cap_add:
+      - CAP_NET_ADMIN
+      - CAP_NET_RAW
+    environment:
+      - USER=${SAMBA_USER}
+      - GROUP=${SAMBA_GROUP}
+      - PASSWORD=${SAMBA_PASSWORD}
+      - SAMBA_LOG_LEVEL=0
+      - WSDD2_ENABLE=1
+      - WSDD2_NETBIOS_NAME=NAS
+    env_file:
+      - lscr.env
+    volumes:
+      - /tank/apps/samba/:/data/
+      - /tank/storage/:/samba/storage/
+    # samba Published ports are discarded when using host network mode
+    # ports:
+    #   - 445:445
+    restart: always
+# </LocalServices>

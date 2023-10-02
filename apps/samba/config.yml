@@ -1,0 +1,22 @@
+auth:
+  - user: ${USER}
+    group: ${GROUP}
+    uid: ${PUID}
+    gid: ${PGID}
+    password: ${PASSWORD}
+
+global:
+  - "force user = ${USER}"
+  - "force group = ${GROUP}"
+
+share:
+  - name: storage
+    path: /samba/storage
+    browsable: yes
+    readonly: no
+    guestok: no
+    validusers: ${USER}
+    writelist: ${USER}
+    veto: no
+    hidefiles: /_*/
+    recycle: yes

@@ -1,0 +1,17 @@
+{
+	"folders": [
+		{
+			"path": "."
+		},
+		{
+			"path": "/tank/apps"
+		}
+	],
+	"settings": {},
+	"extensions": {
+		"recommendations": [
+			"ms-azuretools.vscode-docker",
+			"davidanson.vscode-markdownlint"
+		]
+	}
+}
