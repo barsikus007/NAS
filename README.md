@@ -1,5 +1,8 @@
 # NAS
 
+Copy `example.env` to `.env` and edit
+Use `docker compose up -d --build to start`
+
 ## TODO
 
 - hardware

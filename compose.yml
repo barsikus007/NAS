@@ -40,7 +40,7 @@ services:
       - DUCKDNS_TOKEN=${DUCKDNS_TOKEN}
     volumes:
       # Create a letsencrypt dir within the folder where the docker-compose file is
-      - /tank/data/letsencrypt/:/letsencrypt/
+      - ${APPDATA_VOLUME}/letsencrypt/:/letsencrypt/
       # So that Traefik can listen to the Docker events
       - /var/run/docker.sock:/var/run/docker.sock:ro
 
@@ -74,8 +74,8 @@ services:
     env_file:
       - lscr.env
     volumes:
-      - /tank/apps/samba/:/data/
-      - /tank/storage/:/samba/storage/
+      - ${APPDATA_VOLUME}/samba/:/data/
+      - ${STORAGE_VOLUME}/:/samba/storage/
     # samba Published ports are discarded when using host network mode
     # ports:
     #   - 445:445
