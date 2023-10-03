@@ -40,3 +40,6 @@ certificatesResolvers:
       # The email to provide to let's encrypt
       # Tell to store the certificate on a path under our volume
       storage: /letsencrypt/acme.json
+# allow nextcloud-aio-mastercontainer work
+serversTransport:
+  insecureSkipVerify: true
