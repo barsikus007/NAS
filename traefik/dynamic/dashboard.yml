@@ -3,17 +3,12 @@ http:
     api:
       rule: "Host(`traefik.{{ env "TRAEFIK_ENTRYPOINTS_WEBSECURE_HTTP_TLS_DOMAINS_MAIN" }}`)"
       entrypoints:
-        - "webSecure"
+        - webSecure
       service: api@internal
       tls:
-        certresolver: "ddnsResolver"
+        certResolver: ddnsResolver
       middlewares: auth
   middlewares:
     auth:
       forwardAuth:
         address: "https://{{ env "TRAEFIK_ENTRYPOINTS_WEBSECURE_HTTP_TLS_DOMAINS_MAIN" }}/api/v2/auth/1"
-    wwwCutter:
-      redirectRegex:
-        permanent: true
-        regex: ^https://(?:www\.)?(.+)
-        replacement: https://${1}

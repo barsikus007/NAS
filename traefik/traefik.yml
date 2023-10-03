@@ -26,8 +26,6 @@ entryPoints:
   webSecure:
     address: :443
     http:
-      middlewares:
-        - wwwCutter@file
       tls:
         certResolver: ddnsResolver
 certificatesResolvers:
