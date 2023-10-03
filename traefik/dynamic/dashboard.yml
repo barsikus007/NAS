@@ -1,0 +1,14 @@
+http:
+  routers:
+    api:
+      rule: "Host(`traefik.{{ env "TRAEFIK_ENTRYPOINTS_WEBSECURE_HTTP_TLS_DOMAINS_MAIN" }}`)"
+      entrypoints:
+        - "webSecure"
+      service: api@internal
+      tls:
+        certresolver: "ddnsResolver"
+      middlewares: auth
+  middlewares:
+    auth:
+      forwardAuth:
+        address: "https://{{ env "TRAEFIK_ENTRYPOINTS_WEBSECURE_HTTP_TLS_DOMAINS_MAIN" }}/api/v2/auth/1"

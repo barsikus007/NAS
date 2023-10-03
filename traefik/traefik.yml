@@ -1,14 +1,17 @@
 log:
   level: DEBUG
 api:
+  dashboard: true
   # Enables the web UI and tells Traefik to listen to docker
-  insecure: true  # TODO switch when ready
+  # TODO uncomment to debug ssl
+  # insecure: true
 providers:
   docker:
     exposedByDefault: false
   file:
-    filename: /etc/traefik/nextcloud.yml # Adjust the path according your needs.
-    watch: true
+    directory: /etc/traefik/dynamic # Adjust the path according your needs.
+    # TODO uncomment to debug configs
+    # watch: true
 # This whole section is dedicated to options, keyed by entry point, that will apply only to HTTP routing.
 entryPoints:
   web:
@@ -32,6 +35,7 @@ certificatesResolvers:
       dnsChallenge:
         # Tell which provider to use
         provider: duckdns
+        # TODO uncomment to debug ssl
         # caserver: https://acme-staging-v02.api.letsencrypt.org/directory
       # The email to provide to let's encrypt
       # Tell to store the certificate on a path under our volume
