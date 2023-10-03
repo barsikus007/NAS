@@ -1,8 +1,11 @@
 # NAS
 
-Copy `example.env` to `.env` and edit
-Copy `apps/` to your folder specified in `APPDATA_VOLUME` env var
-Use `docker compose up -d --build to start`
+## Install
+
+- Install docker (ex: `curl -fsSL https://get.docker.com | sh`)
+- Copy `example.env` to `.env` and edit
+- Copy `apps/` to your folder specified in `APPDATA_VOLUME` env var
+- Use `docker compose up -d --build` to start
 
 ## TODO
 
@@ -19,7 +22,6 @@ Use `docker compose up -d --build to start`
   - RTC battery
     - <https://shop.allnetchina.cn/products/rtc-battery-for-rock-pi-4>
 - software
-  - www redir traefik
   - ldap
     - traefik ldap plugin
     - or/and organizr ldap
