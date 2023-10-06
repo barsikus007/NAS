@@ -1,0 +1,49 @@
+# Root creation
+dn: %%LDAP_HOST%%
+objectClass: dcObject
+objectClass: organization
+dc: %%LDAP_FIRST_DC%%
+o: %%LDAP_ORGANIZATION%%
+
+dn: ou=people,%%LDAP_HOST%%
+objectClass: organizationalUnit
+ou: users
+
+dn: ou=groups,%%LDAP_HOST%%
+objectClass: organizationalUnit
+ou: groups
+
+# lastGID
+dn: cn=lastGID,%%LDAP_HOST%%
+cn: lastGID
+objectClass: device
+objectClass: top
+description: Records the last GID used to create a Posix group. This prevents
+ the re-use of a GID from a deleted group.
+serialNumber: 2002
+
+# lastUID
+dn: cn=lastUID,%%LDAP_HOST%%
+cn: lastUID
+objectClass: device
+objectClass: top
+description: Records the last UID used to create a Posix account. This prevent
+ s the re-use of a UID from a deleted account.
+serialNumber: 2000
+
+# Groups creation
+dn: cn=everybody,ou=groups,%%LDAP_HOST%%
+cn: everybody
+objectClass: top
+objectClass: posixGroup
+objectClass: groupOfUniqueNames
+uniqueMember:
+gidNumber: 2001
+
+dn: cn=admins,ou=groups,%%LDAP_HOST%%
+cn: admins
+objectClass: top
+objectClass: posixGroup
+objectClass: groupOfUniqueNames
+uniqueMember:
+gidNumber: 2002

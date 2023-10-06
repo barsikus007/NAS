@@ -1,4 +1,65 @@
 services:
+  openldap:
+    container_name: openldap
+    restart: on-failure:3
+    image: bitnami/openldap:latest
+    ports:
+      - 1389:389
+    volumes:
+      - ${APPDATA_VOLUME?}/openldap/schemas/:/schemas/:ro
+      - ${APPDATA_VOLUME?}/openldap/ldifs/:/ldifs/:ro
+      - openldap_data:/bitnami/openldap/
+    environment:
+      - LDAP_PORT_NUMBER=389
+      - LDAP_ROOT=${LDAP_HOST?}
+      - LDAP_ADMIN_USERNAME=${LDAP_BIND_ADMIN?}
+      - LDAP_ADMIN_PASSWORD=${LDAP_BIND_ADMIN_PASSWORD?}
+      # - BITNAMI_DEBUG=true
+      - LDAP_ALLOW_ANON_BINDING=no
+      - LDAP_SKIP_DEFAULT_TREE=yes
+      - LDAP_EXTRA_SCHEMAS=cosine,inetorgperson
+
+  ldap-user-manager:
+    container_name: lum
+    restart: on-failure:3
+    image: wheelybird/ldap-user-manager
+    environment:
+      - SERVER_HOSTNAME=lum.${HOST?}
+      - NO_HTTPS=true
+      - LDAP_REQUIRE_STARTTLS=false
+      - LDAP_IGNORE_CERT_ERRORS=true
+      # - LDAP_DEBUG=true
+      - LDAP_URI=ldap://openldap
+      - LDAP_BASE_DN=${LDAP_HOST?}
+      - LDAP_ADMINS_GROUP=admins
+      - LDAP_ADMIN_BIND_DN=cn=${LDAP_BIND_ADMIN?},${LDAP_HOST?}
+      - LDAP_ADMIN_BIND_PWD=${LDAP_BIND_ADMIN_PASSWORD?}
+      - USERNAME_FORMAT={first_name}
+    labels:
+      traefik.enable: true
+      traefik.http.routers.lum.rule: Host(`lum.${HOST?}`)
+      traefik.http.routers.lum.entrypoints: webSecure
+      traefik.http.routers.lum.tls.certresolver: ddnsResolver
+
+  # no arm64 build :(
+  # ldap-ssp:
+  #   container_name: ssp
+  #   restart: on-failure:3
+  #   image: ltbproject/self-service-password:latest
+  #   environment:
+  #     - LDAP_URL=ldap://openldap
+  #     - LDAP_BINDDN=cn=${LDAP_BIND_ADMIN?},${LDAP_HOST?}
+  #     - LDAP_BINDPW=ADMIN_PASSWORD
+  #     - LDAP_BASE=ou=people,${LDAP_HOST?}
+  #     - PWD_MIN_LENGTH=8
+  #     - PWD_MIN_LOWER=3
+  #     - PWD_MIN_DIGIT=2
+  #   labels:
+  #     traefik.enable: true
+  #     traefik.http.routers.lum.rule: Host(`password.${HOST?}`)
+  #     traefik.http.routers.lum.entrypoints: webSecure
+  #     traefik.http.routers.lum.tls.certresolver: ddnsResolver
+
   traefik:
     # The official v2 Traefik docker image
     image: traefik:latest
@@ -13,13 +74,13 @@ services:
     #   # The Web UI (enabled by --api.insecure=true)
     #   - "8080:8080"
     environment:
-      - TRAEFIK_ENTRYPOINTS_WEBSECURE_HTTP_TLS_DOMAINS_MAIN=${HOST}
-      - TRAEFIK_ENTRYPOINTS_WEBSECURE_HTTP_TLS_DOMAINS_SANS=*.${HOST}
-      - TRAEFIK_CERTIFICATESRESOLVERS_DDNSRESOLVER_ACME_EMAIL=${HOST_EMAIL}
-      - DUCKDNS_TOKEN=${DUCKDNS_TOKEN}
+      - TRAEFIK_ENTRYPOINTS_WEBSECURE_HTTP_TLS_DOMAINS_MAIN=${HOST?}
+      - TRAEFIK_ENTRYPOINTS_WEBSECURE_HTTP_TLS_DOMAINS_SANS=*.${HOST?}
+      - TRAEFIK_CERTIFICATESRESOLVERS_DDNSRESOLVER_ACME_EMAIL=${HOST_EMAIL?}
+      - DUCKDNS_TOKEN=${DUCKDNS_TOKEN?}
     volumes:
       # Create a letsencrypt dir within the folder where the docker-compose file is
-      - ${APPDATA_VOLUME}/letsencrypt/:/letsencrypt/
+      - ${APPDATA_VOLUME?}/letsencrypt/:/letsencrypt/
       # So that Traefik can listen to the Docker events
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - ./traefik/:/etc/traefik/:ro
@@ -30,7 +91,7 @@ services:
     restart: unless-stopped
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.whoami.rule=Host(`whoami.${HOST}`)"
+      - "traefik.http.routers.whoami.rule=Host(`whoami.${HOST?}`)"
       - "traefik.http.routers.whoami.entrypoints=webSecure"
       - "traefik.http.routers.whoami.tls.certresolver=ddnsResolver"  # Uses the Host rule to define which certificate to issue
     depends_on:
@@ -45,16 +106,37 @@ services:
     env_file:
       - lscr.env
     volumes:
-      - ${APPDATA_VOLUME}/organizr/:/config/
+      - ${APPDATA_VOLUME?}/organizr/:/config/
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.organizr.rule=Host(`${HOST}`) || Host(`www.${HOST}`)"
+      - "traefik.http.routers.organizr.rule=Host(`${HOST?}`) || Host(`www.${HOST?}`)"
       - "traefik.http.services.organizr.loadbalancer.server.port=80"
       - "traefik.http.services.organizr.loadbalancer.server.scheme=http"
       - "traefik.http.routers.organizr.entrypoints=webSecure"
       - "traefik.http.routers.organizr.tls.certresolver=ddnsResolver"
     depends_on:
       - traefik
+
+  portainer:
+    image: portainer/portainer-ce:latest
+    container_name: portainer
+    restart: always
+    command: -H unix:///var/run/docker.sock
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      # - portainer_data:/data
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.portainer.rule=Host(`docker.${HOST?}`)"
+      - "traefik.http.services.portainer.loadbalancer.server.port=9000"
+      - "traefik.http.routers.portainer.entrypoints=webSecure"
+      - "traefik.http.routers.portainer.tls.certresolver=ddnsResolver"
+      - "traefik.http.routers.portainer.service=portainer"
+
+      - traefik.http.routers.portainer.middlewares=auth@file
+    depends_on:
+      - traefik
+      - organizr
 
   nextcloud-aio-mastercontainer:
     image: nextcloud/all-in-one:latest
@@ -72,8 +154,8 @@ services:
       # - APACHE_IP_BINDING=127.0.0.1 # Should be set when running behind a web server or reverse proxy (like Apache, Nginx, Cloudflare Tunnel and else) that is running on the same host. See https://github.com/nextcloud/all-in-one/blob/main/reverse-proxy.md
       # - BORG_RETENTION_POLICY=--keep-within=7d --keep-weekly=4 --keep-monthly=6 # Allows to adjust borgs retention policy. See https://github.com/nextcloud/all-in-one#how-to-adjust-borgs-retention-policy
       # - COLLABORA_SECCOMP_DISABLED=false # Setting this to true allows to disable Collabora's Seccomp feature. See https://github.com/nextcloud/all-in-one#how-to-disable-collaboras-seccomp-feature
-      - NEXTCLOUD_DATADIR=${APPDATA_VOLUME}/nextcloud # Allows to set the host directory for Nextcloud's datadir. ⚠️⚠️⚠️ Warning: do not set or adjust this value after the initial Nextcloud installation is done! See https://github.com/nextcloud/all-in-one#how-to-change-the-default-location-of-nextclouds-datadir
-      - NEXTCLOUD_MOUNT=${STORAGE_VOLUME}/ # Allows the Nextcloud container to access the chosen directory on the host. See https://github.com/nextcloud/all-in-one#how-to-allow-the-nextcloud-container-to-access-directories-on-the-host
+      - NEXTCLOUD_DATADIR=${APPDATA_VOLUME?}/nextcloud/ # Allows to set the host directory for Nextcloud's datadir. ⚠️⚠️⚠️ Warning: do not set or adjust this value after the initial Nextcloud installation is done! See https://github.com/nextcloud/all-in-one#how-to-change-the-default-location-of-nextclouds-datadir
+      - NEXTCLOUD_MOUNT=${STORAGE_VOLUME?}/ # Allows the Nextcloud container to access the chosen directory on the host. See https://github.com/nextcloud/all-in-one#how-to-allow-the-nextcloud-container-to-access-directories-on-the-host
       # - NEXTCLOUD_UPLOAD_LIMIT=10G # Can be adjusted if you need more. See https://github.com/nextcloud/all-in-one#how-to-adjust-the-upload-limit-for-nextcloud
       # - NEXTCLOUD_MAX_TIME=3600 # Can be adjusted if you need more. See https://github.com/nextcloud/all-in-one#how-to-adjust-the-max-execution-time-for-nextcloud
       # - NEXTCLOUD_MEMORY_LIMIT=512M # Can be adjusted if you need more. See https://github.com/nextcloud/all-in-one#how-to-adjust-the-php-memory-limit-for-nextcloud
@@ -92,13 +174,16 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock:ro # May be changed on macOS, Windows or docker rootless. See the applicable documentation. If adjusting, don't forget to also set 'WATCHTOWER_DOCKER_SOCKET_PATH'!
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.nextcloud-aio-mastercontainer.rule=Host(`aio.cloud.${HOST}`)"
+      - "traefik.http.routers.nextcloud-aio-mastercontainer.rule=Host(`aio.cloud.${HOST?}`)"
       - "traefik.http.services.nextcloud-aio-mastercontainer.loadbalancer.server.port=8080"
       - "traefik.http.services.nextcloud-aio-mastercontainer.loadbalancer.server.scheme=https"
       - "traefik.http.routers.nextcloud-aio-mastercontainer.entrypoints=webSecure"
       - "traefik.http.routers.nextcloud-aio-mastercontainer.tls.certresolver=ddnsResolver"
+
+      - "traefik.http.routers.nextcloud-aio-mastercontainer.middlewares=auth@file"
     depends_on:
       - traefik
+      - organizr
 
 
 # <LocalServices>
@@ -114,20 +199,22 @@ services:
       - CAP_NET_ADMIN
       - CAP_NET_RAW
     environment:
-      - USER=${SAMBA_USER}
-      - GROUP=${SAMBA_GROUP}
-      - PASSWORD=${SAMBA_PASSWORD}
+      - USER=${SAMBA_USER?}
+      - GROUP=${SAMBA_GROUP?}
+      - PASSWORD=${SAMBA_PASSWORD?}
       - SAMBA_LOG_LEVEL=0
       - WSDD2_ENABLE=1
       - WSDD2_NETBIOS_NAME=NAS
     env_file:
       - lscr.env
     volumes:
-      - ${APPDATA_VOLUME}/samba/:/data/
-      - ${STORAGE_VOLUME}/:/samba/storage/
+      - ${APPDATA_VOLUME?}/samba/:/data/
+      - ${STORAGE_VOLUME?}/:/samba/storage/
 # </LocalServices>
 
 
 volumes:
   nextcloud_aio_mastercontainer:
     name: nextcloud_aio_mastercontainer # This line is not allowed to be changed as otherwise the built-in backup solution will not work
+  openldap_data:
+    driver: local

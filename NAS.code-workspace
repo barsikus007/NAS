@@ -13,7 +13,8 @@
 			"ms-azuretools.vscode-docker",
 			"davidanson.vscode-markdownlint",
 			"yzhang.markdown-all-in-one",
-			"bierner.github-markdown-preview"
+			"bierner.github-markdown-preview",
+			"timonwong.shellcheck"
 		]
 	}
 }

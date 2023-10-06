@@ -37,6 +37,8 @@ certificatesResolvers:
         provider: duckdns
         # TODO uncomment to debug ssl
         # caserver: https://acme-staging-v02.api.letsencrypt.org/directory
+        # https://www.reddit.com/r/Traefik/comments/149dplx/traefik_duckdns_dns_challenge_problem/
+        disablePropagationCheck: true
       # The email to provide to let's encrypt
       # Tell to store the certificate on a path under our volume
       storage: /letsencrypt/acme.json
