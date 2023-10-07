@@ -14,7 +14,8 @@
 			"davidanson.vscode-markdownlint",
 			"yzhang.markdown-all-in-one",
 			"bierner.github-markdown-preview",
-			"timonwong.shellcheck"
+			"timonwong.shellcheck",
+			"editorconfig.editorconfig"
 		]
 	}
 }

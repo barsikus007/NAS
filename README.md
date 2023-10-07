@@ -12,6 +12,8 @@
 7. Use `docker compose up -d --build` to start
 8. Config web apps manualy as pointed in section below
 
+Also, dont forget to adapt jellyfin compose config to your hardware decoders
+
 ## GUI configuration
 
 - LDAP (lum.$HOST/setup)
@@ -30,18 +32,23 @@
     6. Account Suffix -> `,ou=people,dc=ogurez,dc=duckdns,dc=org`
     7. Bind Username -> `cn=admin,dc=ogurez,dc=duckdns,dc=org`
     8. LDAP Backend Type -> OpenLDAP
+- JellyFin
+  - TODO
 
 ## Attack surface
 
-- fail2ban on host machine
+- WAN > fail2ban on host machine > docker network
   - 80, 443 traefik
     - 80 is unused
     - 443 refer to docker-hosted services
-      - Nextcloud
+      - nextcloud
       - ...
-      - Rest services use organizr auth
+      - Rest services uses organizr auth
   - 3478 nextcloud-talk
   - 51413 transmission
+- LAN > docker network
+  - 1900/udp jellyfin service discovery (DNLA)
+  - 7359/udp jellyfin client discovery
 
 ## TODO
 
@@ -57,15 +64,18 @@
   - RTC battery
     - <https://shop.allnetchina.cn/products/rtc-battery-for-rock-pi-4>
 - software
+  - <https://hub.docker.com/r/jjm2473/jellyfin-mpp>
+    - <https://launchpad.net/~liujianfeng1994/+archive/ubuntu/rockchip-multimedia>
   - depends_on:
     - remove traefik cause it depends on organizr?
     - traefik
     - organizr
   - `-v /etc/localtime:/etc/localtime:ro`
   - `${APPDATA_VOLUME}/transmission/:/config/` remove
-  - ldap organizr or/and nextcloud or/and portainer
+  - ldap organizr or/and nextcloud or/and portainer or/and jellyfin
   - `/tank/docker/`
   - `apps/` patcher with `.env` values
+  - wireguard
 - software late
   - stop docker if zfs not mount
   - <https://github.com/ramanlabs-in/hachi>

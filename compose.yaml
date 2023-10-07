@@ -178,7 +178,7 @@ services:
     # networks: # Is needed when you want to create the nextcloud-aio network with ipv6-support using this file, see the network config at the bottom of the file
       # - nextcloud-aio # Is needed when you want to create the nextcloud-aio network with ipv6-support using this file, see the network config at the bottom of the file
     volumes:
-      - nextcloud_aio_mastercontainer:/mnt/docker-aio-config # This line is not allowed to be changed as otherwise the built-in backup solution will not work
+      - nextcloud_aio_mastercontainer:/mnt/docker-aio-config/ # This line is not allowed to be changed as otherwise the built-in backup solution will not work
       - /var/run/docker.sock:/var/run/docker.sock:ro # May be changed on macOS, Windows or docker rootless. See the applicable documentation. If adjusting, don't forget to also set 'WATCHTOWER_DOCKER_SOCKET_PATH'!
     labels:
       traefik.enable: true
@@ -216,12 +216,12 @@ services:
     env_file:
       - lscr.env
     volumes:
-      - ${APPDATA_VOLUME}/transmission/:/config/
-      - ${STORAGE_VOLUME}/downloads/:/downloads/
-      - ${STORAGE_VOLUME}/downloads/:/watch/
+      - ${APPDATA_VOLUME?}/transmission/:/config/
+      - ${STORAGE_VOLUME?}/downloads/:/downloads/
+      - ${STORAGE_VOLUME?}/downloads/:/watch/
     labels:
       traefik.enable: true
-      traefik.http.routers.transmission.rule: Host(`torrent.${HOST}`)
+      traefik.http.routers.transmission.rule: Host(`torrent.${HOST?}`)
       traefik.http.services.transmission.loadbalancer.server.port: 9091
       traefik.http.routers.transmission.entrypoints: webSecure
       traefik.http.routers.transmission.tls.certresolver: ddnsResolver
@@ -243,15 +243,52 @@ services:
     env_file:
       - lscr.env
     volumes:
-      - ${APPDATA_VOLUME}/jackett/:/config/
-      - ${STORAGE_VOLUME}/downloads/:/downloads/
+      - ${APPDATA_VOLUME?}/jackett/:/config/
+      - ${STORAGE_VOLUME?}/downloads/:/downloads/
     labels:
       traefik.enable: true
-      traefik.http.routers.jackett.rule: Host(`jackett.${HOST}`)
+      traefik.http.routers.jackett.rule: Host(`jackett.${HOST?}`)
       traefik.http.routers.jackett.entrypoints: webSecure
       traefik.http.routers.jackett.tls.certresolver: ddnsResolver
 
       traefik.http.routers.jackett.middlewares: auth@file
+    depends_on:
+      - traefik
+      - organizr
+
+  jellyfin:
+    # https://hub.docker.com/r/linuxserver/jellyfin
+    image: lscr.io/linuxserver/jellyfin
+    # group_add:
+    #   - render
+    container_name: jellyfin
+    restart: unless-stopped
+    ports:
+    #   - 8096:8096  # webUI
+      - 1900:1900/udp
+      - 7359:7359/udp
+    environment:
+      - JELLYFIN_PublishedServerUrl=${LAN_HOST?}
+    env_file:
+      - lscr.env
+    volumes:
+      - ${APPDATA_VOLUME?}/jellyfin/:/config/
+      - ${STORAGE_VOLUME?}/downloads/tvshows/:/data/tvshows/
+      - ${STORAGE_VOLUME?}/downloads/movies/:/data/movies/
+      # - ${APPDATA_VOLUME?}/jellyfin/backup/:/backup/
+      # - ${STORAGE_VOLUME?}/jf/:/mnt/share1/
+      # - ${STORAGE_VOLUME?}/jf/:/mnt/share2/
+      - /dev/dri/card0:/dev/dri/card0
+      - /dev/dri/card1:/dev/dri/card1
+      - /dev/dri/renderD128:/dev/dri/renderD128
+
+    labels:
+      traefik.enable: true
+      traefik.http.routers.jellyfin.rule: Host(`media.${HOST?}`)
+      traefik.http.routers.jellyfin.entrypoints: webSecure
+      traefik.http.routers.jellyfin.tls.certresolver: ddnsResolver
+
+      traefik.http.routers.jellyfin.middlewares=: auth@file  # TODO could break jellyfin client auth
     depends_on:
       - traefik
       - organizr
