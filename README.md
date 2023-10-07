@@ -34,6 +34,8 @@ Also, dont forget to adapt jellyfin compose config to your hardware decoders
     8. LDAP Backend Type -> OpenLDAP
 - JellyFin
   - TODO
+- *arr
+  - TODO
 
 ## Attack surface
 
@@ -66,16 +68,13 @@ Also, dont forget to adapt jellyfin compose config to your hardware decoders
 - software
   - <https://hub.docker.com/r/jjm2473/jellyfin-mpp>
     - <https://launchpad.net/~liujianfeng1994/+archive/ubuntu/rockchip-multimedia>
-  - depends_on:
-    - remove traefik cause it depends on organizr?
-    - traefik
-    - organizr
   - `-v /etc/localtime:/etc/localtime:ro`
   - `${APPDATA_VOLUME}/transmission/:/config/` remove
   - ldap organizr or/and nextcloud or/and portainer or/and jellyfin
   - `/tank/docker/`
   - `apps/` patcher with `.env` values
   - wireguard
+  - healthchecks
 - software late
   - stop docker if zfs not mount
   - <https://github.com/ramanlabs-in/hachi>
