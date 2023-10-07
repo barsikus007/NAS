@@ -97,11 +97,11 @@ services:
     container_name: whoami
     restart: unless-stopped
     labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.whoami.rule=Host(`whoami.${HOST?}`)"
-      - "traefik.http.routers.whoami.entrypoints=webSecure"
+      traefik.enable: true
+      traefik.http.routers.whoami.rule: Host(`whoami.${HOST?}`)
+      traefik.http.routers.whoami.entrypoints: webSecure
       # Uses the Host rule to define which certificate to issue
-      - "traefik.http.routers.whoami.tls.certresolver=ddnsResolver"
+      traefik.http.routers.whoami.tls.certresolver: ddnsResolver
     depends_on:
       - traefik
 
@@ -116,12 +116,12 @@ services:
     volumes:
       - ${APPDATA_VOLUME?}/organizr/:/config/
     labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.organizr.rule=Host(`${HOST?}`) || Host(`www.${HOST?}`)"
-      - "traefik.http.services.organizr.loadbalancer.server.port=80"
-      - "traefik.http.services.organizr.loadbalancer.server.scheme=http"
-      - "traefik.http.routers.organizr.entrypoints=webSecure"
-      - "traefik.http.routers.organizr.tls.certresolver=ddnsResolver"
+      traefik.enable: true
+      traefik.http.routers.organizr.rule: Host(`${HOST?}`) || Host(`www.${HOST?}`)
+      traefik.http.services.organizr.loadbalancer.server.port: 80
+      traefik.http.services.organizr.loadbalancer.server.scheme: http
+      traefik.http.routers.organizr.entrypoints: webSecure
+      traefik.http.routers.organizr.tls.certresolver: ddnsResolver
     depends_on:
       - traefik
 
@@ -134,14 +134,14 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
       # TODO - portainer_data:/data
     labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.portainer.rule=Host(`docker.${HOST?}`)"
-      - "traefik.http.services.portainer.loadbalancer.server.port=9000"
-      - "traefik.http.routers.portainer.entrypoints=webSecure"
-      - "traefik.http.routers.portainer.tls.certresolver=ddnsResolver"
-      - "traefik.http.routers.portainer.service=portainer"
+      traefik.enable: true
+      traefik.http.routers.portainer.rule: Host(`docker.${HOST?}`)
+      traefik.http.services.portainer.loadbalancer.server.port: 9000
+      traefik.http.routers.portainer.entrypoints: webSecure
+      traefik.http.routers.portainer.tls.certresolver: ddnsResolver
+      traefik.http.routers.portainer.service: portainer
 
-      - traefik.http.routers.portainer.middlewares=auth@file
+      traefik.http.routers.portainer.middlewares: auth@file
     depends_on:
       - traefik
       - organizr
@@ -152,9 +152,9 @@ services:
     init: true
     restart: always
     # ports:
-      # - 80:80 # Can be removed when running behind a web server or reverse proxy (like Apache, Nginx, Cloudflare Tunnel and else). See https://github.com/nextcloud/all-in-one/blob/main/reverse-proxy.md
-      # - 8081:8080
-      # - 8443:8443 # Can be removed when running behind a web server or reverse proxy (like Apache, Nginx, Cloudflare Tunnel and else). See https://github.com/nextcloud/all-in-one/blob/main/reverse-proxy.md
+    #   - 80:80 # Can be removed when running behind a web server or reverse proxy (like Apache, Nginx, Cloudflare Tunnel and else). See https://github.com/nextcloud/all-in-one/blob/main/reverse-proxy.md
+    #   - 8081:8080
+    #   - 8443:8443 # Can be removed when running behind a web server or reverse proxy (like Apache, Nginx, Cloudflare Tunnel and else). See https://github.com/nextcloud/all-in-one/blob/main/reverse-proxy.md
     environment: # Is needed when using any of the options below
       # - AIO_DISABLE_BACKUP_SECTION=false # Setting this to true allows to hide the backup section in the AIO interface. See https://github.com/nextcloud/all-in-one#how-to-disable-the-backup-section
       - APACHE_PORT=11000 # Is needed when running behind a web server or reverse proxy (like Apache, Nginx, Cloudflare Tunnel and else). See https://github.com/nextcloud/all-in-one/blob/main/reverse-proxy.md
@@ -181,14 +181,14 @@ services:
       - nextcloud_aio_mastercontainer:/mnt/docker-aio-config # This line is not allowed to be changed as otherwise the built-in backup solution will not work
       - /var/run/docker.sock:/var/run/docker.sock:ro # May be changed on macOS, Windows or docker rootless. See the applicable documentation. If adjusting, don't forget to also set 'WATCHTOWER_DOCKER_SOCKET_PATH'!
     labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.nextcloud-aio-mastercontainer.rule=Host(`aio.cloud.${HOST?}`)"
-      - "traefik.http.services.nextcloud-aio-mastercontainer.loadbalancer.server.port=8080"
-      - "traefik.http.services.nextcloud-aio-mastercontainer.loadbalancer.server.scheme=https"
-      - "traefik.http.routers.nextcloud-aio-mastercontainer.entrypoints=webSecure"
-      - "traefik.http.routers.nextcloud-aio-mastercontainer.tls.certresolver=ddnsResolver"
+      traefik.enable: true
+      traefik.http.routers.nextcloud-aio-mastercontainer.rule: Host(`aio.cloud.${HOST?}`)
+      traefik.http.services.nextcloud-aio-mastercontainer.loadbalancer.server.port: 8080
+      traefik.http.services.nextcloud-aio-mastercontainer.loadbalancer.server.scheme: https
+      traefik.http.routers.nextcloud-aio-mastercontainer.entrypoints: webSecure
+      traefik.http.routers.nextcloud-aio-mastercontainer.tls.certresolver: ddnsResolver
 
-      - "traefik.http.routers.nextcloud-aio-mastercontainer.middlewares=auth@file"
+      traefik.http.routers.nextcloud-aio-mastercontainer.middlewares: auth@file
     depends_on:
       - traefik
       - organizr
@@ -227,6 +227,31 @@ services:
       traefik.http.routers.transmission.tls.certresolver: ddnsResolver
 
       traefik.http.routers.transmission.middlewares: auth@file
+    depends_on:
+      - traefik
+      - organizr
+
+  jackett:
+    # https://hub.docker.com/r/linuxserver/jackett
+    image: lscr.io/linuxserver/jackett
+    container_name: jackett
+    restart: unless-stopped
+    # ports:
+    #   - 9117:9117
+    # environment:
+    #   - RUN_OPTS=<run options here>
+    env_file:
+      - lscr.env
+    volumes:
+      - ${APPDATA_VOLUME}/jackett/:/config/
+      - ${STORAGE_VOLUME}/downloads/:/downloads/
+    labels:
+      traefik.enable: true
+      traefik.http.routers.jackett.rule: Host(`jackett.${HOST}`)
+      traefik.http.routers.jackett.entrypoints: webSecure
+      traefik.http.routers.jackett.tls.certresolver: ddnsResolver
+
+      traefik.http.routers.jackett.middlewares: auth@file
     depends_on:
       - traefik
       - organizr

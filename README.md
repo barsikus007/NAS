@@ -57,7 +57,12 @@
   - RTC battery
     - <https://shop.allnetchina.cn/products/rtc-battery-for-rock-pi-4>
 - software
+  - depends_on:
+    - remove traefik cause it depends on organizr?
+    - traefik
+    - organizr
   - `-v /etc/localtime:/etc/localtime:ro`
+  - `${APPDATA_VOLUME}/transmission/:/config/` remove
   - ldap organizr or/and nextcloud or/and portainer
   - `/tank/docker/`
   - `apps/` patcher with `.env` values
