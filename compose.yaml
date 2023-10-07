@@ -1,14 +1,10 @@
 services:
   openldap:
     container_name: openldap
-    restart: on-failure:3
+    restart: unless-stopped
     image: bitnami/openldap:latest
-    ports:
-      - 1389:389
-    volumes:
-      - ${APPDATA_VOLUME?}/openldap/schemas/:/schemas/:ro
-      - ${APPDATA_VOLUME?}/openldap/ldifs/:/ldifs/:ro
-      - openldap_data:/bitnami/openldap/
+    # ports:
+    #   - 1389:389
     environment:
       - LDAP_PORT_NUMBER=389
       - LDAP_ROOT=${LDAP_HOST?}
@@ -18,11 +14,17 @@ services:
       - LDAP_ALLOW_ANON_BINDING=no
       - LDAP_SKIP_DEFAULT_TREE=yes
       - LDAP_EXTRA_SCHEMAS=cosine,inetorgperson
+    volumes:
+      - ${APPDATA_VOLUME?}/openldap/schemas/:/schemas/:ro
+      - ${APPDATA_VOLUME?}/openldap/ldifs/:/ldifs/:ro
+      - openldap_data:/bitnami/openldap/
 
   ldap-user-manager:
     container_name: lum
-    restart: on-failure:3
+    restart: unless-stopped
     image: wheelybird/ldap-user-manager
+    # ports:
+    #   - 1380:80
     environment:
       - SERVER_HOSTNAME=lum.${HOST?}
       - NO_HTTPS=true
@@ -41,10 +43,14 @@ services:
       traefik.http.routers.lum.entrypoints: webSecure
       traefik.http.routers.lum.tls.certresolver: ddnsResolver
 
+      traefik.http.routers.lum.middlewares: auth@file
+    depends_on:
+      - organizr
+
   # no arm64 build :(
   # ldap-ssp:
   #   container_name: ssp
-  #   restart: on-failure:3
+  #   restart: unless-stopped
   #   image: ltbproject/self-service-password:latest
   #   environment:
   #     - LDAP_URL=ldap://openldap
@@ -64,7 +70,7 @@ services:
     # The official v2 Traefik docker image
     image: traefik:latest
     container_name: traefik
-    restart: on-failure:3
+    restart: unless-stopped
     network_mode: host
     # ports:
     #   # The HTTP port
@@ -83,6 +89,7 @@ services:
       - ${APPDATA_VOLUME?}/letsencrypt/:/letsencrypt/
       # So that Traefik can listen to the Docker events
       - /var/run/docker.sock:/var/run/docker.sock:ro
+      # Traefik static and dynamic configs
       - ./traefik/:/etc/traefik/:ro
 
   whoami:
@@ -93,7 +100,8 @@ services:
       - "traefik.enable=true"
       - "traefik.http.routers.whoami.rule=Host(`whoami.${HOST?}`)"
       - "traefik.http.routers.whoami.entrypoints=webSecure"
-      - "traefik.http.routers.whoami.tls.certresolver=ddnsResolver"  # Uses the Host rule to define which certificate to issue
+      # Uses the Host rule to define which certificate to issue
+      - "traefik.http.routers.whoami.tls.certresolver=ddnsResolver"
     depends_on:
       - traefik
 
@@ -120,11 +128,11 @@ services:
   portainer:
     image: portainer/portainer-ce:latest
     container_name: portainer
-    restart: always
+    restart: unless-stopped
     command: -H unix:///var/run/docker.sock
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-      # - portainer_data:/data
+      # TODO - portainer_data:/data
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.portainer.rule=Host(`docker.${HOST?}`)"
@@ -185,12 +193,50 @@ services:
       - traefik
       - organizr
 
+  transmission:
+    # https://hub.docker.com/r/linuxserver/transmission
+    image: lscr.io/linuxserver/transmission
+    container_name: transmission
+    restart: unless-stopped
+    ports:
+      - 51413:51413
+      - 51413:51413/udp
+    # https://pcminipro.ru/os/nastrojka-transmission-daemon-settings-json/
+    # https://github.com/linuxserver/docker-mods/tree/transmission-env-var-settings
+    # https://github.com/linuxserver/docker-mods/tree/transmission-transmissionic
+    # environment:
+    #   - DOCKER_MODS=linuxserver/mods:transmission-env-var-settings|linuxserver/mods:transmission-transmissionic
+    #   - TRANSMISSION_WEB_HOME=/transmissionic/
+    #   - TRANSMISSION_WEB_HOME=/transmission-web-control/
+    #   - TRANSMISSION_WEB_HOME=/flood-for-transmission/
+    #   - TRANSMISSION_WEB_HOME=/kettu/
+
+    #   - TRANSMISSION_WEB_HOME=/combustion-release/
+    #   - TRANSMISSION_WEB_HOME=/defaults/
+    env_file:
+      - lscr.env
+    volumes:
+      - ${APPDATA_VOLUME}/transmission/:/config/
+      - ${STORAGE_VOLUME}/downloads/:/downloads/
+      - ${STORAGE_VOLUME}/downloads/:/watch/
+    labels:
+      traefik.enable: true
+      traefik.http.routers.transmission.rule: Host(`torrent.${HOST}`)
+      traefik.http.services.transmission.loadbalancer.server.port: 9091
+      traefik.http.routers.transmission.entrypoints: webSecure
+      traefik.http.routers.transmission.tls.certresolver: ddnsResolver
+
+      traefik.http.routers.transmission.middlewares: auth@file
+    depends_on:
+      - traefik
+      - organizr
+
 
 # <LocalServices>
   samba:
     image: crazymax/samba:4.18.5
     container_name: samba
-    restart: always
+    restart: unless-stopped
     hostname: docker_samba
     network_mode: host
     # ports:

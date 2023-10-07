@@ -57,15 +57,12 @@
   - RTC battery
     - <https://shop.allnetchina.cn/products/rtc-battery-for-rock-pi-4>
 - software
-  - ldap
-    - traefik ldap plugin
-    - or/and organizr ldap
-    - or/and nextcloud ldap
-  - `/tank/docker`
+  - `-v /etc/localtime:/etc/localtime:ro`
+  - ldap organizr or/and nextcloud or/and portainer
+  - `/tank/docker/`
   - `apps/` patcher with `.env` values
 - software late
   - stop docker if zfs not mount
-  - jackett vs <https://github.com/sergiotapia/magnetissimo>
   - <https://github.com/ramanlabs-in/hachi>
     - probably, on client with webdav
   - fail2ban
