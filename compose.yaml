@@ -205,15 +205,16 @@ services:
     # https://pcminipro.ru/os/nastrojka-transmission-daemon-settings-json/
     # https://github.com/linuxserver/docker-mods/tree/transmission-env-var-settings
     # https://github.com/linuxserver/docker-mods/tree/transmission-transmissionic
-    # environment:
-    #   - DOCKER_MODS=linuxserver/mods:transmission-env-var-settings|linuxserver/mods:transmission-transmissionic
-    #   - TRANSMISSION_WEB_HOME=/transmissionic/
-    #   - TRANSMISSION_WEB_HOME=/transmission-web-control/
-    #   - TRANSMISSION_WEB_HOME=/flood-for-transmission/
-    #   - TRANSMISSION_WEB_HOME=/kettu/
+    environment:
+      # - DOCKER_MODS=linuxserver/mods:transmission-env-var-settings|linuxserver/mods:transmission-transmissionic
+      - DOCKER_MODS=linuxserver/mods:transmission-transmissionic
+      - TRANSMISSION_WEB_HOME=/transmissionic/
+      # - TRANSMISSION_WEB_HOME=/transmission-web-control/
+      # - TRANSMISSION_WEB_HOME=/flood-for-transmission/
+      # - TRANSMISSION_WEB_HOME=/kettu/
 
-    #   - TRANSMISSION_WEB_HOME=/combustion-release/
-    #   - TRANSMISSION_WEB_HOME=/defaults/
+      # - TRANSMISSION_WEB_HOME=/combustion-release/
+      # - TRANSMISSION_WEB_HOME=/defaults/
     env_file:
       - lscr.env
     volumes:
@@ -372,6 +373,61 @@ services:
     depends_on:
       - prowlarr
 # </Servarr>
+
+  # syncthing:
+  #   # https://hub.docker.com/r/linuxserver/syncthing
+  #   image: lscr.io/linuxserver/syncthing:latest
+  #   container_name: syncthing
+  #   hostname: syncthing #optional
+  #   env_file:
+  #     - lscr.env
+  #   volumes:
+  #     - ${APPDATA_VOLUME}/syncthing/config:/config
+  #     - ${APPDATA_VOLUME}/syncthing/data1:/data1
+  #     - ${APPDATA_VOLUME}/syncthing/data2:/data2
+  #   # ports:
+  #   #   - 8384:8384
+  #   #   - 22000:22000/tcp
+  #   #   - 22000:22000/udp
+  #   #   - 21027:21027/udp
+  #   labels:
+  #     - "traefik.enable=true"
+  #     - "traefik.http.routers.syncthing.rule=Host(`sync.${HOST}`)"
+  #     - "traefik.http.routers.syncthing.entrypoints=webSecure"
+  #     - "traefik.http.routers.syncthing.tls.certresolver=ddnsResolver"
+
+  #     - "traefik.http.routers.syncthing.middlewares=auth@file"
+  #   restart: unless-stopped
+  #   depends_on:
+  #     - traefik
+  #     - organizr
+
+  # gitlab:
+  #   image: yrzr/gitlab-ce-arm64v8:latest
+  #   restart: unless-stopped
+  #   environment:
+  #     GITLAB_OMNIBUS_CONFIG: |
+  #       external_url 'https://gitlab.${HOST}'
+  #       nginx['listen_https'] = false
+  #       nginx['listen_port'] = 80
+
+  #       # Add any other gitlab.rb configuration here, each on its own line
+  #   volumes:
+  #     - ${APPDATA_VOLUME}/gitlab/config/:/etc/gitlab/
+  #     - ${APPDATA_VOLUME}/gitlab/logs/:/var/log/gitlab/
+  #     - ${APPDATA_VOLUME}/gitlab/data/:/var/opt/gitlab/
+  #   shm_size: '256m'
+  #   labels:
+  #     - "traefik.enable=true"
+  #     - "traefik.http.routers.gitlab.rule=Host(`gitlab.${HOST}`)"
+  #     - "traefik.http.services.gitlab.loadbalancer.server.port=80"
+  #     - "traefik.http.routers.gitlab.entrypoints=webSecure"
+  #     - "traefik.http.routers.gitlab.tls.certresolver=ddnsResolver"
+
+  #     # - "traefik.http.routers.gitlab.middlewares=auth@file"
+  #   depends_on:
+  #     - traefik
+  #     # - organizr
 
 
 # <LocalServices>

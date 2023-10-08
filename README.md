@@ -3,31 +3,33 @@
 ## Install
 
 1. Install docker (ex: `curl -fsSL https://get.docker.com | sh`)
-2. Copy `example.env` to `.env` and edit
-   1. Edit `lscr.env`
+2. Copy `example.env` to `.env` and edit (also edit `lscr.env`)
 3. Create `APPDATA_VOLUME` and `STORAGE_VOLUME` folders/mountpoints
-4. Patch `apps/` configs with `./bin/config_patcher.sh` (patch will based on `.env` values)
+4. Patch `apps/` configs with `./bin/config_patcher.sh` (patch will be based on `.env` values)
 5. Copy `apps/` to your folder specified in `APPDATA_VOLUME` env var
 6. Open `80`, `443` (traefik entrypoints) and `3478` (nextcloud-talk entrypoint) ports
-7. Use `docker compose up -d --build` to start
-8. Config web apps manualy as pointed in section below
+7. `docker compose up -d --build && sudo chown -R --reference=${HOME} ${APPDATA_VOLUME}/*`
+   1. Use `docker compose up -d --build` to start
+   2. Change the ownership of the files under `APPDATA_VOLUME` (e.g. `sudo chown -R --reference=${HOME} ${APPDATA_VOLUME}/*`) immediately after volume creation
+8. Wait for containers to be in a healthy state and stop some of them to patch them `docker compose stop organizr TODO`
+9. Configure web applications manually as indicated in the section below
 
-Also, dont forget to adapt jellyfin compose config to your hardware decoders
+- P.S. Do not forget to adapt jellyfin compose config to your hardware decoders
 
 ## GUI configuration
 
-- LDAP (lum.$HOST/setup)
-  - `./bin/config_patcher.sh && sudo cp -r patched_apps/* $APPDATA_VOLUME/`
+- LDAP (lum.${HOST}/setup)
+  - `./bin/config_patcher.sh && sudo cp -r patched_apps/* ${APPDATA_VOLUME}/`
   - `docker compose down openldap && ./bin/config_patcher.sh && sudo cp -r patched_apps/* /tank/apps/ && dcu`
-- NextCloud (cloud.$HOST)
+- NextCloud (cloud.${HOST})
   - Enable `External storage support` app
   - LDAP TODO
 - Organizr
-  - LDAP ($HOST/#settings-settings-main > Authentication)
+  - LDAP (${HOST}/#settings-settings-main > Authentication)
     1. Authentication Type -> Organizr DB + Backend (TODO Backend Only)
     2. Authentication Backend -> Ldap
     3. Host Address -> `ldap://openldap`
-    4. Host Base DN -> `cn=%s,$LDAP_HOST`
+    4. Host Base DN -> `cn=%s,${LDAP_HOST}`
     5. Account Prefix -> `uid=`
     6. Account Suffix -> `,ou=people,dc=ogurez,dc=duckdns,dc=org`
     7. Bind Username -> `cn=admin,dc=ogurez,dc=duckdns,dc=org`
@@ -39,13 +41,14 @@ Also, dont forget to adapt jellyfin compose config to your hardware decoders
 
 ## Attack surface
 
-- WAN > fail2ban on host machine > docker network
+- WAN > fail2ban > docker network
   - 80, 443 traefik
-    - 80 is unused
+    - 80 is redirected to 443
     - 443 refer to docker-hosted services
       - nextcloud
-      - ...
-      - Rest services uses organizr auth
+      - jellyfin
+      - organizr
+      - rest services uses organizr auth
   - 3478 nextcloud-talk
   - 51413 transmission
 - LAN > docker network
@@ -66,6 +69,9 @@ Also, dont forget to adapt jellyfin compose config to your hardware decoders
   - RTC battery
     - <https://shop.allnetchina.cn/products/rtc-battery-for-rock-pi-4>
 - software
+  - `.env`
+    - `COMPOSE_HTTP_TIMEOUT=240`
+    - `PIP_DEFAULT_TIMEOUT=100`
   - <https://hub.docker.com/r/jjm2473/jellyfin-mpp>
     - <https://launchpad.net/~liujianfeng1994/+archive/ubuntu/rockchip-multimedia>
   - `-v /etc/localtime:/etc/localtime:ro`
@@ -73,13 +79,14 @@ Also, dont forget to adapt jellyfin compose config to your hardware decoders
   - ldap organizr or/and nextcloud or/and portainer or/and jellyfin
   - `/tank/docker/`
   - `apps/` patcher with `.env` values
+  - `{$APPDATA_VOLUME}/` patcher with `.env` values
   - wireguard
   - healthchecks
 - software late
   - stop docker if zfs not mount
   - <https://github.com/ramanlabs-in/hachi>
     - probably, on client with webdav
-  - fail2ban
+  - fail2ban cheatsheet
     - organizr
     - ldap
   - change lcdr UID GID
@@ -89,6 +96,7 @@ Also, dont forget to adapt jellyfin compose config to your hardware decoders
   - pin versions
     - traefik 3 ?
   - change passwds and ssh-rsa after complete setup
+  - check for grammar issues
 
 ## ZFS cheatsheet
 
