@@ -20,7 +20,7 @@
 
 - LDAP (lum.${HOST}/setup)
   - `./bin/config_patcher.sh && sudo cp -r patched_apps/* ${APPDATA_VOLUME}/`
-  - `docker compose down openldap && ./bin/config_patcher.sh && sudo cp -r patched_apps/* /tank/apps/ && dcu`
+  - `docker compose down openldap && ./bin/config_patcher.sh && sudo cp -r patched_apps/* /tank/apps/ && docker compose up -d openldap`
 - NextCloud (cloud.${HOST})
   - Enable `External storage support` app
   - LDAP TODO
@@ -52,8 +52,19 @@
   - 3478 nextcloud-talk
   - 51413 transmission
 - LAN > docker network
+  - 8096 jellyfin webUI
   - 1900/udp jellyfin service discovery (DNLA)
   - 7359/udp jellyfin client discovery
+
+## Notes
+
+- Lidarr disabled due to unusable use case for me.
+  - If you need album release software, then uncomment `services.lidarr` section in `compose.yaml`
+- Folder structure for media system is:
+  - `${STORAGE_VOLUME}/downloads/`
+    - `${STORAGE_VOLUME}/downloads/{,in}complete` for downloads
+    - `${STORAGE_VOLUME}/downloads/torrents` for torrent files
+    - `${STORAGE_VOLUME}/downloads/media` for *arrs and jellyfin media
 
 ## TODO
 
@@ -82,10 +93,16 @@
   - `{$APPDATA_VOLUME}/` patcher with `.env` values
   - wireguard
   - healthchecks
-- software late
-  - stop docker if zfs not mount
+- alternate software
+  - seafile ? (check nextcloud speed)
+  - gitea ? (instead of gitlab due to weak NAS)
+- new software
+  - syncthing ? (for some important folder, which supposed to be synced on every device (passwords/notes))
+  - <https://github.com/immich-app/immich>
   - <https://github.com/ramanlabs-in/hachi>
     - probably, on client with webdav
+- software late
+  - stop docker if zfs not mount
   - fail2ban cheatsheet
     - organizr
     - ldap

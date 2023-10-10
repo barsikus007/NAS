@@ -239,7 +239,7 @@ services:
     container_name: jellyfin
     restart: unless-stopped
     ports:
-    #   - 8096:8096  # webUI
+      - 8096:8096
       - 1900:1900/udp
       - 7359:7359/udp
     environment:
@@ -248,11 +248,9 @@ services:
       - lscr.env
     volumes:
       - ${APPDATA_VOLUME?}/jellyfin/:/config/
-      - ${STORAGE_VOLUME?}/media/tvshows/:/data/tvshows/
-      - ${STORAGE_VOLUME?}/media/movies/:/data/movies/
-      # - ${APPDATA_VOLUME?}/jellyfin/backup/:/backup/
-      # - ${STORAGE_VOLUME?}/jf/:/mnt/share1/
-      # - ${STORAGE_VOLUME?}/jf/:/mnt/share2/
+      - ${STORAGE_VOLUME?}/downloads/media/tvshows/:/data/tvshows/
+      - ${STORAGE_VOLUME?}/downloads/media/movies/:/data/movies/
+      - ${STORAGE_VOLUME?}/downloads/media/music/:/data/music/
       - /dev/dri/card0:/dev/dri/card0
       - /dev/dri/card1:/dev/dri/card1
       - /dev/dri/renderD128:/dev/dri/renderD128
@@ -262,8 +260,6 @@ services:
       traefik.http.services.jellyfin.loadbalancer.server.port: 8096
       traefik.http.routers.jellyfin.entrypoints: webSecure
       traefik.http.routers.jellyfin.tls.certresolver: ddnsResolver
-      # TODO auth could break jellyfin client auth
-      traefik.http.routers.jellyfin.middlewares: auth@file
     depends_on:
       - organizr
 
@@ -304,42 +300,40 @@ services:
       - organizr
       - transmission
 
-  lidarr:
-    # https://hub.docker.com/r/linuxserver/lidarr
-    image: lscr.io/linuxserver/lidarr:latest
-    container_name: lidarr
-    restart: unless-stopped
-    ports:
-      - 8686:8686
-    env_file:
-      - lscr.env
-    volumes:
-      - ${APPDATA_VOLUME?}/lidarr/:/config/
-      - ${STORAGE_VOLUME?}/media/music/:/music/
-      - ${STORAGE_VOLUME?}/downloads/complete/music/:/downloads/
-    labels:
-      traefik.enable: true
-      traefik.http.routers.lidarr.rule: Host(`lidarr.${HOST?}`)
-      traefik.http.routers.lidarr.entrypoints: webSecure
-      traefik.http.routers.lidarr.tls.certresolver: ddnsResolver
+  # lidarr:
+  #   # https://hub.docker.com/r/linuxserver/lidarr
+  #   image: lscr.io/linuxserver/lidarr:latest
+  #   container_name: lidarr
+  #   restart: unless-stopped
+  #   # ports:
+  #   #   - 8686:8686
+  #   env_file:
+  #     - lscr.env
+  #   volumes:
+  #     - ${APPDATA_VOLUME?}/lidarr/:/config/
+  #     - ${STORAGE_VOLUME?}/downloads/:/downloads/
+  #   labels:
+  #     traefik.enable: true
+  #     traefik.http.routers.lidarr.rule: Host(`lidarr.${HOST?}`)
+  #     traefik.http.routers.lidarr.entrypoints: webSecure
+  #     traefik.http.routers.lidarr.tls.certresolver: ddnsResolver
 
-      traefik.http.routers.lidarr.middlewares: auth@file
-    depends_on:
-      - prowlarr
+  #     traefik.http.routers.lidarr.middlewares: auth@file
+  #   depends_on:
+  #     - prowlarr
 
   radarr:
     # https://hub.docker.com/r/linuxserver/radarr
     image: lscr.io/linuxserver/radarr:latest
     container_name: radarr
     restart: unless-stopped
-    ports:
-      - 7878:7878
+    # ports:
+    #   - 7878:7878
     env_file:
       - lscr.env
     volumes:
       - ${APPDATA_VOLUME?}/radarr/:/config/
-      - ${STORAGE_VOLUME?}/media/movies/:/movies/
-      - ${STORAGE_VOLUME?}/downloads/complete/movies/:/downloads/
+      - ${STORAGE_VOLUME?}/downloads/:/downloads/
     labels:
       traefik.enable: true
       traefik.http.routers.radarr.rule: Host(`radarr.${HOST?}`)
@@ -355,14 +349,13 @@ services:
     image: lscr.io/linuxserver/sonarr:latest
     container_name: sonarr
     restart: unless-stopped
-    ports:
-      - 8989:8989
+    # ports:
+    #   - 8989:8989
     env_file:
       - lscr.env
     volumes:
       - ${APPDATA_VOLUME?}/sonarr/:/config/
-      - ${STORAGE_VOLUME?}/media/tvshows/:/tv/
-      - ${STORAGE_VOLUME?}/downloads/complete/tvshows/:/downloads/
+      - ${STORAGE_VOLUME?}/downloads/:/downloads/
     labels:
       traefik.enable: true
       traefik.http.routers.sonarr.rule: Host(`sonarr.${HOST?}`)
@@ -378,7 +371,6 @@ services:
   #   # https://hub.docker.com/r/linuxserver/syncthing
   #   image: lscr.io/linuxserver/syncthing:latest
   #   container_name: syncthing
-  #   hostname: syncthing #optional
   #   env_file:
   #     - lscr.env
   #   volumes:
