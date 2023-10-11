@@ -74,7 +74,7 @@ services:
     container_name: traefik
     restart: unless-stopped
     extra_hosts:
-      - host.docker.internal:${DOCKER_HOST?}
+      - host.docker.internal:host-gateway
     ports:
       # The HTTP port
       - "80:80"
