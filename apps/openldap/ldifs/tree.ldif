@@ -47,3 +47,11 @@ objectClass: posixGroup
 objectClass: groupOfUniqueNames
 uniqueMember:
 gidNumber: 2002
+
+# readonly
+# dn: cn=%%LDAP_BIND_READONLY%%,%%LDAP_HOST%%
+# cn: %%LDAP_BIND_READONLY%%
+# objectClass: simpleSecurityObject
+# objectClass: organizationalRole
+# userPassword: %%LDAP_BIND_READONLY_PASSWORD%%
+# description: LDAP read only user
