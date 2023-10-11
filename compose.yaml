@@ -129,26 +129,6 @@ services:
     depends_on:
       - traefik
 
-  portainer:
-    image: portainer/portainer:1.25.0
-    container_name: portainer
-    restart: unless-stopped
-    command: -H unix:///var/run/docker.sock --no-auth
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-      - ${APPDATA_VOLUME?}/portainer/:/data/
-    labels:
-      traefik.enable: true
-      traefik.http.routers.portainer.rule: Host(`docker.${HOST?}`)
-      traefik.http.services.portainer.loadbalancer.server.port: 9000
-      traefik.http.routers.portainer.entrypoints: webSecure
-      traefik.http.routers.portainer.tls.certresolver: ddnsResolver
-      traefik.http.routers.portainer.service: portainer
-
-      traefik.http.routers.portainer.middlewares: auth@file
-    depends_on:
-      - organizr
-
   nextcloud-aio-mastercontainer:
     image: nextcloud/all-in-one:latest
     container_name: nextcloud-aio-mastercontainer # This line is not allowed to be changed as otherwise AIO will not work correctly
@@ -484,6 +464,26 @@ services:
 
 
 # <MonitorServices>
+  portainer:
+    image: portainer/portainer:1.25.0
+    container_name: portainer
+    restart: unless-stopped
+    command: -H unix:///var/run/docker.sock --no-auth
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ${APPDATA_VOLUME?}/portainer/:/data/
+    labels:
+      traefik.enable: true
+      traefik.http.routers.portainer.rule: Host(`docker.${HOST?}`)
+      traefik.http.services.portainer.loadbalancer.server.port: 9000
+      traefik.http.routers.portainer.entrypoints: webSecure
+      traefik.http.routers.portainer.tls.certresolver: ddnsResolver
+      traefik.http.routers.portainer.service: portainer
+
+      traefik.http.routers.portainer.middlewares: auth@file
+    depends_on:
+      - organizr
+
   watchtower:
     image: containrrr/watchtower
     container_name: watchtower
