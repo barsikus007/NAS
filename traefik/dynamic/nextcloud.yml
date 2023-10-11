@@ -14,7 +14,7 @@ http:
     nextcloud:
       loadBalancer:
         servers:
-          - url: "http://localhost:11000" # Use the host's IP address if Traefik runs outside the host network
+          - url: "http://host.docker.internal:11000" # Use the host's IP address if Traefik runs outside the host network
 
   middlewares:
     nextcloud-secure-headers:
@@ -25,7 +25,7 @@ http:
 
     https-redirect:
       redirectscheme:
-        scheme: https 
+        scheme: https
 
     nextcloud-chain:
       chain:

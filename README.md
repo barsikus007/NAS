@@ -25,7 +25,7 @@
   - Enable `External storage support` app
   - LDAP TODO
 - Organizr
-  - LDAP (${HOST}/#settings-settings-main > Authentication)
+  - LDAP (${HOST}/#settings-settings-main => Authentication)
     1. Authentication Type -> Organizr DB + Backend (TODO Backend Only)
     2. Authentication Backend -> Ldap
     3. Host Address -> `ldap://openldap`
@@ -41,7 +41,7 @@
 
 ## Attack surface
 
-- WAN > fail2ban > docker network
+- WAN => fail2ban => docker network
   - 80, 443 traefik
     - 80 is redirected to 443
     - 443 refer to docker-hosted services
@@ -51,7 +51,7 @@
       - rest services uses organizr auth
   - 3478 nextcloud-talk
   - 51413 transmission
-- LAN > docker network
+- LAN => docker network
   - 8096 jellyfin webUI
   - 1900/udp jellyfin service discovery (DNLA)
   - 7359/udp jellyfin client discovery

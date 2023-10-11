@@ -73,14 +73,15 @@ services:
     image: traefik:latest
     container_name: traefik
     restart: unless-stopped
-    network_mode: host
-    # ports:
-    #   # The HTTP port
-    #   - "80:80"
-    #   # The HTTPS port
-    #   - "443:443"
-    #   # The Web UI (enabled by --api.insecure=true)
-    #   - "8080:8080"
+    extra_hosts:
+      - host.docker.internal:${DOCKER_HOST?}
+    ports:
+      # The HTTP port
+      - "80:80"
+      # The HTTPS port
+      - "443:443"
+      # # The Web UI (enabled by --api.insecure=true)
+      # - "8080:8080"
     environment:
       - TRAEFIK_ENTRYPOINTS_WEBSECURE_HTTP_TLS_DOMAINS_MAIN=${HOST?}
       - TRAEFIK_ENTRYPOINTS_WEBSECURE_HTTP_TLS_DOMAINS_SANS=*.${HOST?}
@@ -111,6 +112,8 @@ services:
     image: organizr/organizr:latest
     container_name: organizr
     restart: unless-stopped
+    # ports:
+    #   - 8080:80
     environment:
       - fpm=true  # false by default
     env_file:
@@ -191,7 +194,7 @@ services:
 
       traefik.http.routers.nextcloud-aio-mastercontainer.middlewares: auth@file
     depends_on:
-      - organizr
+      - traefik
 
   transmission:
     # https://hub.docker.com/r/linuxserver/transmission
@@ -261,7 +264,7 @@ services:
       traefik.http.routers.jellyfin.entrypoints: webSecure
       traefik.http.routers.jellyfin.tls.certresolver: ddnsResolver
     depends_on:
-      - organizr
+      - traefik
 
 # <Servarr>
   flaresolverr:
@@ -367,6 +370,28 @@ services:
       - prowlarr
 # </Servarr>
 
+  tubesync:
+    # https://github.com/meeb/tubesync
+    image: ghcr.io/meeb/tubesync:latest
+    container_name: tubesync
+    restart: unless-stopped
+    # ports:
+    #   - 4848:4848
+    volumes:
+      - ${APPDATA_VOLUME?}/tubesync/:/config/
+      - ${STORAGE_VOLUME?}/downloads/media/youtube/:/downloads/
+    env_file:
+      - lscr.env
+    labels:
+      traefik.enable: true
+      traefik.http.routers.tubesync.rule: Host(`youtube.${HOST?}`)
+      traefik.http.routers.tubesync.entrypoints: webSecure
+      traefik.http.routers.tubesync.tls.certresolver: ddnsResolver
+
+      traefik.http.routers.tubesync.middlewares: auth@file
+    depends_on:
+      - organizr
+
   # syncthing:
   #   # https://hub.docker.com/r/linuxserver/syncthing
   #   image: lscr.io/linuxserver/syncthing:latest
@@ -392,7 +417,7 @@ services:
   #   restart: unless-stopped
   #   depends_on:
   #     - traefik
-  #     - organizr
+  #     # - organizr
 
   # gitlab:
   #   image: yrzr/gitlab-ce-arm64v8:latest

@@ -11,4 +11,4 @@ http:
   middlewares:
     auth:
       forwardAuth:
-        address: "https://{{ env "TRAEFIK_ENTRYPOINTS_WEBSECURE_HTTP_TLS_DOMAINS_MAIN" }}/api/v2/auth/1"
+        address: "http://organizr/api/v2/auth/1"
