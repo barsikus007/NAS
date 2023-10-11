@@ -80,7 +80,7 @@ services:
       - "80:80"
       # The HTTPS port
       - "443:443"
-      # # The Web UI (enabled by --api.insecure=true)
+      # The Web UI (enabled by --api.insecure=true)
       # - "8080:8080"
     environment:
       - TRAEFIK_ENTRYPOINTS_WEBSECURE_HTTP_TLS_DOMAINS_MAIN=${HOST?}
@@ -205,19 +205,17 @@ services:
       # - 9091:9091
       - 51413:51413
       - 51413:51413/udp
-    # https://pcminipro.ru/os/nastrojka-transmission-daemon-settings-json/
     # https://github.com/linuxserver/docker-mods/tree/transmission-env-var-settings
     # https://github.com/linuxserver/docker-mods/tree/transmission-transmissionic
     environment:
-      # - DOCKER_MODS=linuxserver/mods:transmission-env-var-settings|linuxserver/mods:transmission-transmissionic
-      - DOCKER_MODS=linuxserver/mods:transmission-transmissionic
+      - DOCKER_MODS=linuxserver/mods:transmission-env-var-settings|linuxserver/mods:transmission-transmissionic
       - TRANSMISSION_WEB_HOME=/transmissionic/
       # - TRANSMISSION_WEB_HOME=/transmission-web-control/
       # - TRANSMISSION_WEB_HOME=/flood-for-transmission/
-      # - TRANSMISSION_WEB_HOME=/kettu/
-
-      # - TRANSMISSION_WEB_HOME=/combustion-release/
-      # - TRANSMISSION_WEB_HOME=/defaults/
+      - TRANSMISSION_ALT_SPEED_DOWN=2048
+      - TRANSMISSION_ALT_SPEED_UP=256
+      # TODO limit due to broken pcie on rock-3a
+      - TRANSMISSION_ALT_SPEED_ENABLED=true
     env_file:
       - lscr.env
     volumes:
@@ -254,9 +252,10 @@ services:
       - ${STORAGE_VOLUME?}/downloads/media/tvshows/:/data/tvshows/
       - ${STORAGE_VOLUME?}/downloads/media/movies/:/data/movies/
       - ${STORAGE_VOLUME?}/downloads/media/music/:/data/music/
-      - /dev/dri/card0:/dev/dri/card0
-      - /dev/dri/card1:/dev/dri/card1
-      - /dev/dri/renderD128:/dev/dri/renderD128
+    devices:
+      - /dev/dri/card0
+      - /dev/dri/card1
+      - /dev/dri/renderD128
     labels:
       traefik.enable: true
       traefik.http.routers.jellyfin.rule: Host(`media.${HOST?}`)
@@ -452,7 +451,6 @@ services:
     image: crazymax/samba:4.18.5
     container_name: samba
     restart: unless-stopped
-    hostname: docker_samba
     network_mode: host
     # ports:
     #   - 445:445
@@ -472,6 +470,68 @@ services:
       - ${APPDATA_VOLUME?}/samba/:/data/
       - ${STORAGE_VOLUME?}/:/samba/storage/
 # </LocalServices>
+
+
+  watchtower:
+    image: containrrr/watchtower
+    container_name: watchtower
+    restart: unless-stopped
+    command: --cleanup --remove-volumes
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      # - ~/.docker/config.json:/config.json
+
+  glances:
+    image: nicolargo/glances
+    container_name: glances
+    restart: unless-stopped
+    pid: host
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /etc/os-release:/etc/os-release:ro
+    environment:
+      - "GLANCES_OPT=-w"
+    env_file:
+      - lscr.env
+    labels:
+      traefik.enable: true
+      traefik.http.routers.glances.rule: Host(`control.${HOST?}`)
+      traefik.http.routers.glances.entrypoints: webSecure
+      traefik.http.routers.glances.tls.certresolver: ddnsResolver
+
+      traefik.http.routers.glances.middlewares: auth@file
+    depends_on:
+      - organizr
+
+  scrutiny:
+    # https://github.com/AnalogJ/scrutiny
+    # https://glances.readthedocs.io/en/latest/cmds.html#interactive-commands
+    image: ghcr.io/analogj/scrutiny:master-omnibus
+    container_name: scrutiny
+    restart: unless-stopped
+    # ports:
+    #   - "8080:8080" # webapp
+    #   - "8086:8086" # influxDB admin
+    cap_add:
+      - SYS_RAWIO
+    volumes:
+      - /run/udev:/run/udev:ro
+      - ${APPDATA_VOLUME?}/scrutiny/config/:/opt/scrutiny/config/
+      - ${APPDATA_VOLUME?}/scrutiny/influxdb/:/opt/scrutiny/influxdb/
+    devices:
+      - /dev/sda
+      - /dev/sdb
+      - /dev/sdc
+      - /dev/sdd
+    labels:
+      traefik.enable: true
+      traefik.http.routers.scrutiny.rule: Host(`smart.control.${HOST?}`)
+      traefik.http.routers.scrutiny.entrypoints: webSecure
+      traefik.http.routers.scrutiny.tls.certresolver: ddnsResolver
+
+      traefik.http.routers.scrutiny.middlewares: auth@file
+    depends_on:
+      - organizr
 
 
 volumes:

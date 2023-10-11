@@ -101,6 +101,8 @@
   - <https://github.com/immich-app/immich>
   - <https://github.com/ramanlabs-in/hachi>
     - probably, on client with webdav
+  - <https://github.com/fallenbagel/jellyseerr>
+  - <https://www.photoprism.app>
 - software late
   - stop docker if zfs not mount
   - fail2ban cheatsheet
