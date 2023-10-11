@@ -50,13 +50,19 @@
 
 ## Notes
 
-- Lidarr disabled due to unusable use case for me.
-  - If you need album release software, then uncomment `services.lidarr` section in `compose.yaml`
+- Domain structure:
+  - `${HOST}` => organizr
+    - `www.${HOST}` => organizr
+    - `traefik.${HOST}` => traefik dashboard
+    - TODO
 - Folder structure for media system is:
   - `${STORAGE_VOLUME}/downloads/`
     - `${STORAGE_VOLUME}/downloads/{,in}complete` for downloads
     - `${STORAGE_VOLUME}/downloads/torrents` for torrent files
     - `${STORAGE_VOLUME}/downloads/media` for *arrs and jellyfin media
+- Lidarr disabled due to unusable use case for me
+  - If you need album release software, then uncomment `services.lidarr` section in `compose.yaml`
+- Transmission alt speed enabled due to broken pcie on rock-3a
 
 ## TODO
 
@@ -75,15 +81,15 @@
   - `.env`
     - `COMPOSE_HTTP_TIMEOUT=240`
     - `PIP_DEFAULT_TIMEOUT=100`
-  - <https://hub.docker.com/r/jjm2473/jellyfin-mpp>
+  - jellyfin acceleration
+    - <https://hub.docker.com/r/jjm2473/jellyfin-mpp>
     - <https://launchpad.net/~liujianfeng1994/+archive/ubuntu/rockchip-multimedia>
   - `-v /etc/localtime:/etc/localtime:ro`
   - `${APPDATA_VOLUME}/transmission/:/config/` remove
-  - ldap organizr or/and nextcloud or/and portainer or/and jellyfin
+  - ldap organizr or/and nextcloud or/and jellyfin
   - `/tank/docker/`
   - `apps/` patcher with `.env` values
   - `{$APPDATA_VOLUME}/` patcher with `.env` values
-  - wireguard
   - healthchecks
 - alternate software
   - seafile ? (check nextcloud speed)
@@ -97,17 +103,23 @@
   - <https://www.photoprism.app>
 - software late
   - stop docker if zfs not mount
-  - fail2ban cheatsheet
-    - organizr
-    - ldap
+  - fail2ban
+    - [organizr](https://docs.organizr.app/features/fail2ban-integration)
+    - [nextcloud](https://docs.nextcloud.com/server/stable/admin_manual/installation/harden_server.html#setup-fail2ban)
+    - [traefik](https://plugins.traefik.io/plugins/628c9ebcffc0cd18356a979f/fail2-ban)
+    - ldap ?
+  - VPN (wireguard)
+    - inner
+    - outer
   - change lcdr UID GID
-- publication late
-  - remove quotes from labels lol
-  - device specific section in readme
-  - pin versions
-    - traefik 3 ?
   - change passwds and ssh-rsa after complete setup
+- readme roadmap
+  - PBR section
+  - device specific section
   - check for grammar issues
+- podman migration
+  - why ?
+  - <https://github.com/nextcloud/all-in-one/discussions/3487>
 
 ## ZFS cheatsheet
 
@@ -121,5 +133,5 @@
 
 ### TODO 1
 
-weekly cron to backup compressed backup of zpool to 5th 2tb disk
-backup / and /boot volumes disk (emmc)
+- weekly cron to backup compressed backup of zpool to 5th 2tb disk
+- backup / and /boot volumes disk (emmc)

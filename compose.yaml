@@ -77,11 +77,11 @@ services:
       - host.docker.internal:host-gateway
     ports:
       # The HTTP port
-      - "80:80"
+      - 80:80
       # The HTTPS port
-      - "443:443"
+      - 443:443
       # The Web UI (enabled by --api.insecure=true)
-      # - "8080:8080"
+      # - 8080:8080
     environment:
       - TRAEFIK_ENTRYPOINTS_WEBSECURE_HTTP_TLS_DOMAINS_MAIN=${HOST?}
       - TRAEFIK_ENTRYPOINTS_WEBSECURE_HTTP_TLS_DOMAINS_SANS=*.${HOST?}
@@ -123,7 +123,6 @@ services:
     labels:
       traefik.enable: true
       traefik.http.routers.organizr.rule: Host(`${HOST?}`) || Host(`www.${HOST?}`)
-      traefik.http.services.organizr.loadbalancer.server.port: 80
       traefik.http.services.organizr.loadbalancer.server.scheme: http
       traefik.http.routers.organizr.entrypoints: webSecure
       traefik.http.routers.organizr.tls.certresolver: ddnsResolver
@@ -214,7 +213,6 @@ services:
       # - TRANSMISSION_WEB_HOME=/flood-for-transmission/
       - TRANSMISSION_ALT_SPEED_DOWN=2048
       - TRANSMISSION_ALT_SPEED_UP=256
-      # TODO limit due to broken pcie on rock-3a
       - TRANSMISSION_ALT_SPEED_ENABLED=true
     env_file:
       - lscr.env
@@ -407,16 +405,15 @@ services:
   #   #   - 22000:22000/udp
   #   #   - 21027:21027/udp
   #   labels:
-  #     - "traefik.enable=true"
-  #     - "traefik.http.routers.syncthing.rule=Host(`sync.${HOST}`)"
-  #     - "traefik.http.routers.syncthing.entrypoints=webSecure"
-  #     - "traefik.http.routers.syncthing.tls.certresolver=ddnsResolver"
+  #     traefik.enable: true
+  #     traefik.http.routers.syncthing.rule: Host(`sync.${HOST}`)
+  #     traefik.http.routers.syncthing.entrypoints: webSecure
+  #     traefik.http.routers.syncthing.tls.certresolver: ddnsResolver
 
-  #     - "traefik.http.routers.syncthing.middlewares=auth@file"
+  #     traefik.http.routers.syncthing.middlewares: auth@file
   #   restart: unless-stopped
   #   depends_on:
   #     - traefik
-  #     # - organizr
 
   # gitlab:
   #   image: yrzr/gitlab-ce-arm64v8:latest
@@ -434,21 +431,20 @@ services:
   #     - ${APPDATA_VOLUME}/gitlab/data/:/var/opt/gitlab/
   #   shm_size: '256m'
   #   labels:
-  #     - "traefik.enable=true"
-  #     - "traefik.http.routers.gitlab.rule=Host(`gitlab.${HOST}`)"
-  #     - "traefik.http.services.gitlab.loadbalancer.server.port=80"
-  #     - "traefik.http.routers.gitlab.entrypoints=webSecure"
-  #     - "traefik.http.routers.gitlab.tls.certresolver=ddnsResolver"
+  #     traefik.enable: true
+  #     traefik.http.routers.gitlab.rule: Host(`gitlab.${HOST}`)
+  #     # traefik.http.services.gitlab.loadbalancer.server.port: 80
+  #     traefik.http.routers.gitlab.entrypoints: webSecure
+  #     traefik.http.routers.gitlab.tls.certresolver: ddnsResolver
 
-  #     # - "traefik.http.routers.gitlab.middlewares=auth@file"
+  #     # traefik.http.routers.gitlab.middlewares: auth@file
   #   depends_on:
   #     - traefik
-  #     # - organizr
 
 
 # <LocalServices>
   samba:
-    image: crazymax/samba:4.18.5
+    image: crazymax/samba:latest
     container_name: samba
     restart: unless-stopped
     network_mode: host
@@ -490,7 +486,7 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - /etc/os-release:/etc/os-release:ro
     environment:
-      - "GLANCES_OPT=-w"
+      - GLANCES_OPT=-w
     env_file:
       - lscr.env
     labels:
@@ -510,8 +506,8 @@ services:
     container_name: scrutiny
     restart: unless-stopped
     # ports:
-    #   - "8080:8080" # webapp
-    #   - "8086:8086" # influxDB admin
+    #   - 8080:8080 # webapp
+    #   - 8086:8086 # influxDB admin
     cap_add:
       - SYS_RAWIO
     volumes:
