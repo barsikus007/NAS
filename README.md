@@ -15,6 +15,8 @@
 9. Configure web applications manually as indicated in the section below
 
 - P.S. Do not forget to adapt jellyfin compose config to your hardware decoders
+- P.S. Do not forget to add your disks to scrutiny compose config
+- TODO `subo bash -c 'echo "ignore-warnings ARM64-COW-BUG" >> ${APPDATA_VOLUME?}/gitlab/data/redis/redis.conf'`
 
 ## GUI configuration
 
@@ -92,8 +94,9 @@
   - `{$APPDATA_VOLUME}/` patcher with `.env` values
   - healthchecks
 - alternate software
-  - seafile ? (check nextcloud speed)
-  - gitea ? (instead of gitlab due to weak NAS)
+  - [seafile](https://www.seafile.com/en/home/) ? (check nextcloud speed)
+  - [syncthing](https://syncthing.net) ? (check cloud usecase)
+  - [gitea](https://about.gitea.com) ? (instead of gitlab due to weak NAS)
 - new software
   - syncthing ? (for some important folder, which supposed to be synced on every device (passwords/notes))
   - <https://github.com/immich-app/immich>
@@ -102,7 +105,7 @@
   - <https://github.com/fallenbagel/jellyseerr>
   - <https://www.photoprism.app>
 - software late
-  - stop docker if zfs not mount
+  - stop docker if zfs not mount (TODO 0)
   - fail2ban
     - [organizr](https://docs.organizr.app/features/fail2ban-integration)
     - [nextcloud](https://docs.nextcloud.com/server/stable/admin_manual/installation/harden_server.html#setup-fail2ban)
@@ -131,7 +134,26 @@
 
 `sudo apt install zfs-auto-snapshot -y`
 
+### Docker on ZFS
+
+```bash
+sudo service docker stop
+sudo zfs create -o com.sun:auto-snapshot=false tank/docker
+sudo mv /var/lib/docker/* /tank/docker/
+sudo rm -rf /var/lib/docker/
+sudo ln -s /tank/docker/ /var/lib/docker
+sudo service docker start
+```
+
+- TODO 0 maybe need to create docker service trigger on ZFS mount?
+  - <https://www.reddit.com/r/docker/comments/my6p90/docker_zfs_storage_driver_vs_storing_docker_data/>
+  - <https://www.reddit.com/r/zfs/comments/10e0rkx/for_anyone_using_zfsol_with_docker/>
+
 ### TODO 1
 
 - weekly cron to backup compressed backup of zpool to 5th 2tb disk
 - backup / and /boot volumes disk (emmc)
+
+## References
+
+- [Цикл статей: построение защищённого NAS, либо домашнего мини-сервера](https://habr.com/ru/articles/359346/)

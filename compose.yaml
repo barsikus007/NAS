@@ -56,7 +56,7 @@ services:
   #   environment:
   #     - LDAP_URL=ldap://openldap
   #     - LDAP_BINDDN=cn=${LDAP_BIND_ADMIN?},${LDAP_HOST?}
-  #     - LDAP_BINDPW=ADMIN_PASSWORD
+  #     - LDAP_BINDPW=${LDAP_BIND_ADMIN_PASSWORD?}
   #     - LDAP_BASE=ou=people,${LDAP_HOST?}
   #     - PWD_MIN_LENGTH=8
   #     - PWD_MIN_LOWER=3
@@ -396,9 +396,9 @@ services:
   #   env_file:
   #     - lscr.env
   #   volumes:
-  #     - ${APPDATA_VOLUME}/syncthing/config:/config
-  #     - ${APPDATA_VOLUME}/syncthing/data1:/data1
-  #     - ${APPDATA_VOLUME}/syncthing/data2:/data2
+  #     - ${APPDATA_VOLUME?}/syncthing/config:/config
+  #     - ${APPDATA_VOLUME?}/syncthing/data1:/data1
+  #     - ${APPDATA_VOLUME?}/syncthing/data2:/data2
   #   # ports:
   #   #   - 8384:8384
   #   #   - 22000:22000/tcp
@@ -406,7 +406,7 @@ services:
   #   #   - 21027:21027/udp
   #   labels:
   #     traefik.enable: true
-  #     traefik.http.routers.syncthing.rule: Host(`sync.${HOST}`)
+  #     traefik.http.routers.syncthing.rule: Host(`sync.${HOST?}`)
   #     traefik.http.routers.syncthing.entrypoints: webSecure
   #     traefik.http.routers.syncthing.tls.certresolver: ddnsResolver
 
@@ -415,31 +415,46 @@ services:
   #   depends_on:
   #     - traefik
 
-  # gitlab:
-  #   image: yrzr/gitlab-ce-arm64v8:latest
-  #   restart: unless-stopped
-  #   environment:
-  #     GITLAB_OMNIBUS_CONFIG: |
-  #       external_url 'https://gitlab.${HOST}'
-  #       nginx['listen_https'] = false
-  #       nginx['listen_port'] = 80
+  gitlab:
+    image: yrzr/gitlab-ce-arm64v8:latest
+    container_name: gitlab
+    restart: unless-stopped
+    environment:
+      GITLAB_OMNIBUS_CONFIG: |
+        external_url 'https://gitlab.${HOST?}'
+        nginx['listen_https'] = false
+        nginx['listen_port'] = 80
 
-  #       # Add any other gitlab.rb configuration here, each on its own line
-  #   volumes:
-  #     - ${APPDATA_VOLUME}/gitlab/config/:/etc/gitlab/
-  #     - ${APPDATA_VOLUME}/gitlab/logs/:/var/log/gitlab/
-  #     - ${APPDATA_VOLUME}/gitlab/data/:/var/opt/gitlab/
-  #   shm_size: '256m'
-  #   labels:
-  #     traefik.enable: true
-  #     traefik.http.routers.gitlab.rule: Host(`gitlab.${HOST}`)
-  #     # traefik.http.services.gitlab.loadbalancer.server.port: 80
-  #     traefik.http.routers.gitlab.entrypoints: webSecure
-  #     traefik.http.routers.gitlab.tls.certresolver: ddnsResolver
+        # Add any other gitlab.rb configuration here, each on its own line
+        gitlab_rails['ldap_enabled'] = true
+        gitlab_rails['ldap_servers'] = {
+          'main' => {
+            'label' => 'NAS',
+            'host' =>  'openldap',
+            'port' => 389,
+            'uid' => 'uid',
+            'base' => 'ou=people,${LDAP_HOST?}',
+            'bind_dn' => 'cn=${LDAP_BIND_ADMIN?},${LDAP_HOST?}',
+            'password' => '${LDAP_BIND_ADMIN_PASSWORD?}',
+            'encryption' => 'plain',
+            # 'user_filter' => '(memberOf=cn=developers,ou=groups,${LDAP_HOST?})',
+          }
+        }
+    volumes:
+      - ${APPDATA_VOLUME?}/gitlab/config/:/etc/gitlab/
+      - ${APPDATA_VOLUME?}/gitlab/logs/:/var/log/gitlab/
+      - ${APPDATA_VOLUME?}/gitlab/data/:/var/opt/gitlab/
+    shm_size: '256m'
+    labels:
+      traefik.enable: true
+      traefik.http.routers.gitlab.rule: Host(`gitlab.${HOST?}`)
+      traefik.http.services.gitlab.loadbalancer.server.port: 80
+      traefik.http.routers.gitlab.entrypoints: webSecure
+      traefik.http.routers.gitlab.tls.certresolver: ddnsResolver
 
-  #     # traefik.http.routers.gitlab.middlewares: auth@file
-  #   depends_on:
-  #     - traefik
+      # traefik.http.routers.gitlab.middlewares: auth@file
+    depends_on:
+      - traefik
 
 
 # <LocalServices>
@@ -468,6 +483,7 @@ services:
 # </LocalServices>
 
 
+# <MonitorServices>
   watchtower:
     image: containrrr/watchtower
     container_name: watchtower
@@ -528,6 +544,7 @@ services:
       traefik.http.routers.scrutiny.middlewares: auth@file
     depends_on:
       - organizr
+# </MonitorServices>
 
 
 volumes:
