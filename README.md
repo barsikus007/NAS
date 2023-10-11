@@ -11,7 +11,7 @@
 7. `docker compose up -d --build && sudo chown -R --reference=${HOME} ${APPDATA_VOLUME}/*`
    1. Use `docker compose up -d --build` to start
    2. Change the ownership of the files under `APPDATA_VOLUME` (e.g. `sudo chown -R --reference=${HOME} ${APPDATA_VOLUME}/*`) immediately after volume creation
-8. Wait for containers to be in a healthy state and stop some of them to patch them `docker compose stop organizr TODO`
+8. Wait for containers to be in a healthy state, then stop some of them to patch `docker compose stop organizr && ./bin/appdata_patcher.sh && docker compose up -d organizr`
 9. Configure web applications manually as indicated in the section below
 
 - P.S. Do not forget to adapt jellyfin compose config to your hardware decoders
@@ -25,15 +25,7 @@
   - Enable `External storage support` app
   - LDAP TODO
 - Organizr
-  - LDAP (${HOST}/#settings-settings-main => Authentication)
-    1. Authentication Type -> Organizr DB + Backend (TODO Backend Only)
-    2. Authentication Backend -> Ldap
-    3. Host Address -> `ldap://openldap`
-    4. Host Base DN -> `cn=%s,${LDAP_HOST}`
-    5. Account Prefix -> `uid=`
-    6. Account Suffix -> `,ou=people,dc=ogurez,dc=duckdns,dc=org`
-    7. Bind Username -> `cn=admin,dc=ogurez,dc=duckdns,dc=org`
-    8. LDAP Backend Type -> OpenLDAP
+  - LDAP `${HOST}/#settings-settings-main` => `Authentication` => set `Bind Password`
 - JellyFin
   - TODO
 - *arr

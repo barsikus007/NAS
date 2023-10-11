@@ -131,10 +131,10 @@ services:
       - traefik
 
   portainer:
-    image: portainer/portainer-ce:latest
+    image: portainer/portainer:1.25.0
     container_name: portainer
     restart: unless-stopped
-    command: -H unix:///var/run/docker.sock
+    command: -H unix:///var/run/docker.sock --no-auth
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - ${APPDATA_VOLUME?}/portainer/:/data/

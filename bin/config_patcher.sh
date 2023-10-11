@@ -1,3 +1,4 @@
+#!/bin/bash
 set -o allexport
 source .env
 set +o allexport
@@ -18,16 +19,16 @@ OLD_FILE=$OLD_FILE_DIR$FILE
 NEW_FILE=$NEW_FILE_DIR$FILE
 echo Patching $OLD_FILE
 echo with values below:
-echo LDAP_HOST="$LDAP_HOST"
-echo LDAP_FIRST_DC="$LDAP_FIRST_DC"
-echo LDAP_ORGANIZATION="$LDAP_ORGANIZATION"
 mkdir -p $NEW_FILE_DIR
 cp $OLD_FILE $NEW_FILE_DIR
+echo LDAP_HOST="$LDAP_HOST"
 sed "s/%%LDAP_HOST%%/$LDAP_HOST/g" -i $NEW_FILE
+echo LDAP_FIRST_DC="$LDAP_FIRST_DC"
 sed "s/%%LDAP_FIRST_DC%%/$LDAP_FIRST_DC/g" -i $NEW_FILE
+echo LDAP_ORGANIZATION="$LDAP_ORGANIZATION"
 sed "s/%%LDAP_ORGANIZATION%%/$LDAP_ORGANIZATION/g" -i $NEW_FILE
 echo
 echo
 echo All files was patched successfuly
-echo Now you can copy it with command below:
+echo Please review them and copy with command below:
 echo sudo cp -r $PATCHES_DIR'*' "$APPDATA_VOLUME"/
