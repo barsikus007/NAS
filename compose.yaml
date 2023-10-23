@@ -16,6 +16,7 @@ services:
       - LDAP_SKIP_DEFAULT_TREE=yes
       - LDAP_EXTRA_SCHEMAS=cosine,inetorgperson
     volumes:
+      - /etc/localtime:/etc/localtime:ro
       - ${APPDATA_VOLUME?}/openldap/schemas/:/schemas/:ro
       - ${APPDATA_VOLUME?}/openldap/ldifs/:/ldifs/:ro
       - openldap_data:/bitnami/openldap/
@@ -38,6 +39,8 @@ services:
       - LDAP_ADMIN_BIND_DN=cn=${LDAP_BIND_ADMIN?},${LDAP_HOST?}
       - LDAP_ADMIN_BIND_PWD=${LDAP_BIND_ADMIN_PASSWORD?}
       - USERNAME_FORMAT={first_name}
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
     labels:
       traefik.enable: true
       traefik.http.routers.lum.rule: Host(`lum.${HOST?}`)
@@ -61,6 +64,8 @@ services:
   #     - PWD_MIN_LENGTH=8
   #     - PWD_MIN_LOWER=3
   #     - PWD_MIN_DIGIT=2
+  #   volumes:
+  #     - /etc/localtime:/etc/localtime:ro
   #   labels:
   #     traefik.enable: true
   #     traefik.http.routers.lum.rule: Host(`password.${HOST?}`)
@@ -88,6 +93,7 @@ services:
       - TRAEFIK_CERTIFICATESRESOLVERS_DDNSRESOLVER_ACME_EMAIL=${HOST_EMAIL?}
       - DUCKDNS_TOKEN=${DUCKDNS_TOKEN?}
     volumes:
+      - /etc/localtime:/etc/localtime:ro
       # Create a letsencrypt dir within the folder where the docker-compose file is
       - ${APPDATA_VOLUME?}/letsencrypt/:/letsencrypt/
       # So that Traefik can listen to the Docker events
@@ -99,6 +105,8 @@ services:
     image: traefik/whoami:latest
     container_name: whoami
     restart: unless-stopped
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
     labels:
       traefik.enable: true
       traefik.http.routers.whoami.rule: Host(`whoami.${HOST?}`)
@@ -119,6 +127,7 @@ services:
     env_file:
       - lscr.env
     volumes:
+      - /etc/localtime:/etc/localtime:ro
       - ${APPDATA_VOLUME?}/organizr/:/config/
     labels:
       traefik.enable: true
@@ -161,6 +170,7 @@ services:
     # networks: # Is needed when you want to create the nextcloud-aio network with ipv6-support using this file, see the network config at the bottom of the file
       # - nextcloud-aio # Is needed when you want to create the nextcloud-aio network with ipv6-support using this file, see the network config at the bottom of the file
     volumes:
+      - /etc/localtime:/etc/localtime:ro
       - nextcloud_aio_mastercontainer:/mnt/docker-aio-config/ # This line is not allowed to be changed as otherwise the built-in backup solution will not work
       - /var/run/docker.sock:/var/run/docker.sock:ro # May be changed on macOS, Windows or docker rootless. See the applicable documentation. If adjusting, don't forget to also set 'WATCHTOWER_DOCKER_SOCKET_PATH'!
     labels:
@@ -197,6 +207,7 @@ services:
     env_file:
       - lscr.env
     volumes:
+      - /etc/localtime:/etc/localtime:ro
       - ${APPDATA_VOLUME?}/transmission/:/config/
       - ${STORAGE_VOLUME?}/downloads/:/downloads/
       - ${STORAGE_VOLUME?}/downloads/torrents/:/watch/
@@ -226,6 +237,7 @@ services:
     env_file:
       - lscr.env
     volumes:
+      - /etc/localtime:/etc/localtime:ro
       - ${APPDATA_VOLUME?}/jellyfin/:/config/
       - ${STORAGE_VOLUME?}/downloads/media/tvshows/:/data/tvshows/
       - ${STORAGE_VOLUME?}/downloads/media/movies/:/data/movies/
@@ -255,6 +267,8 @@ services:
     #   - LOG_LEVEL=info
     #   - LOG_HTML=false
     #   - CAPTCHA_SOLVER=none
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
     env_file:
       - lscr.env
 
@@ -268,6 +282,7 @@ services:
     env_file:
       - lscr.env
     volumes:
+      - /etc/localtime:/etc/localtime:ro
       - ${APPDATA_VOLUME?}/prowlarr/:/config/
     labels:
       traefik.enable: true
@@ -290,6 +305,7 @@ services:
   #   env_file:
   #     - lscr.env
   #   volumes:
+  #     - /etc/localtime:/etc/localtime:ro
   #     - ${APPDATA_VOLUME?}/lidarr/:/config/
   #     - ${STORAGE_VOLUME?}/downloads/:/downloads/
   #   labels:
@@ -312,6 +328,7 @@ services:
     env_file:
       - lscr.env
     volumes:
+      - /etc/localtime:/etc/localtime:ro
       - ${APPDATA_VOLUME?}/radarr/:/config/
       - ${STORAGE_VOLUME?}/downloads/:/downloads/
     labels:
@@ -334,6 +351,7 @@ services:
     env_file:
       - lscr.env
     volumes:
+      - /etc/localtime:/etc/localtime:ro
       - ${APPDATA_VOLUME?}/sonarr/:/config/
       - ${STORAGE_VOLUME?}/downloads/:/downloads/
     labels:
@@ -355,6 +373,7 @@ services:
     # ports:
     #   - 4848:4848
     volumes:
+      - /etc/localtime:/etc/localtime:ro
       - ${APPDATA_VOLUME?}/tubesync/:/config/
       - ${STORAGE_VOLUME?}/downloads/media/youtube/:/downloads/
     env_file:
@@ -421,6 +440,7 @@ services:
           }
         }
     volumes:
+      - /etc/localtime:/etc/localtime:ro
       - ${APPDATA_VOLUME?}/gitlab/config/:/etc/gitlab/
       - ${APPDATA_VOLUME?}/gitlab/logs/:/var/log/gitlab/
       - ${APPDATA_VOLUME?}/gitlab/data/:/var/opt/gitlab/
@@ -458,6 +478,7 @@ services:
     env_file:
       - lscr.env
     volumes:
+      - /etc/localtime:/etc/localtime:ro
       - ${APPDATA_VOLUME?}/samba/:/data/
       - ${STORAGE_VOLUME?}/:/samba/storage/
 # </LocalServices>
@@ -470,6 +491,7 @@ services:
     restart: unless-stopped
     command: -H unix:///var/run/docker.sock --no-auth
     volumes:
+      - /etc/localtime:/etc/localtime:ro
       - /var/run/docker.sock:/var/run/docker.sock
       - ${APPDATA_VOLUME?}/portainer/:/data/
     labels:
@@ -490,21 +512,22 @@ services:
     restart: unless-stopped
     command: --cleanup --remove-volumes
     volumes:
+      - /etc/localtime:/etc/localtime:ro
       - /var/run/docker.sock:/var/run/docker.sock
-      # - ~/.docker/config.json:/config.json
 
   glances:
     image: nicolargo/glances
     container_name: glances
     restart: unless-stopped
     pid: host
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-      - /etc/os-release:/etc/os-release:ro
     environment:
       - GLANCES_OPT=-w
     env_file:
       - lscr.env
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /etc/os-release:/etc/os-release:ro
     labels:
       traefik.enable: true
       traefik.http.routers.glances.rule: Host(`control.${HOST?}`)
@@ -527,6 +550,7 @@ services:
     cap_add:
       - SYS_RAWIO
     volumes:
+      - /etc/localtime:/etc/localtime:ro
       - /run/udev:/run/udev:ro
       - ${APPDATA_VOLUME?}/scrutiny/config/:/opt/scrutiny/config/
       - ${APPDATA_VOLUME?}/scrutiny/influxdb/:/opt/scrutiny/influxdb/

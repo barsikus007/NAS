@@ -117,7 +117,7 @@
   - <https://github.com/fallenbagel/jellyseerr>
   - <https://www.photoprism.app>
 - software late
-  - [Docker on ZFS](./README.md#docker-on-zfs)
+  - [Docker on ZFS](.#docker-on-zfs)
   - fail2ban
     - [organizr](https://docs.organizr.app/features/fail2ban-integration)
     - [nextcloud](https://docs.nextcloud.com/server/stable/admin_manual/installation/harden_server.html#setup-fail2ban)
