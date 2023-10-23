@@ -42,6 +42,7 @@
       - nextcloud
       - jellyfin
       - organizr
+      - gitlab
       - rest services uses organizr auth
   - 3478 nextcloud-talk
   - 51413 transmission
@@ -80,19 +81,30 @@
   - RTC battery
     - <https://shop.allnetchina.cn/products/rtc-battery-for-rock-pi-4>
 - software
-  - `.env`
-    - `COMPOSE_HTTP_TIMEOUT=240`
-    - `PIP_DEFAULT_TIMEOUT=100`
   - jellyfin acceleration
     - <https://hub.docker.com/r/jjm2473/jellyfin-mpp>
     - <https://launchpad.net/~liujianfeng1994/+archive/ubuntu/rockchip-multimedia>
   - `-v /etc/localtime:/etc/localtime:ro`
   - `${APPDATA_VOLUME}/transmission/:/config/` remove
   - ldap organizr or/and nextcloud or/and jellyfin
-  - `/tank/docker/`
-  - `apps/` patcher with `.env` values
-  - `{$APPDATA_VOLUME}/` patcher with `.env` values
-  - healthchecks
+  - patchers
+    - `apps/` patcher with `.env` values
+    - `{$APPDATA_VOLUME}/` patcher with `.env` values
+  - bluid ssp on arm64 or check if organizr have ssp?
+  - healthchecks ?
+    - flaresolverr
+    - glances
+    - jellyfin
+    - lum
+    - openldap
+    - portainer
+    - prowlarr
+    - radarr
+    - scrutiny
+    - sonarr
+    - traefik
+    - transmission
+    - whoami
 - alternate software
   - [seafile](https://www.seafile.com/en/home/) ? (check nextcloud speed)
   - [syncthing](https://syncthing.net) ? (check cloud usecase)
@@ -105,7 +117,7 @@
   - <https://github.com/fallenbagel/jellyseerr>
   - <https://www.photoprism.app>
 - software late
-  - stop docker if zfs not mount (TODO 0)
+  - [Docker on ZFS](./README.md#docker-on-zfs)
   - fail2ban
     - [organizr](https://docs.organizr.app/features/fail2ban-integration)
     - [nextcloud](https://docs.nextcloud.com/server/stable/admin_manual/installation/harden_server.html#setup-fail2ban)
@@ -120,7 +132,8 @@
   - PBR section
   - device specific section
   - check for grammar issues
-- podman migration
+- [podman](https://podman.io) migration
+  - (faster than docker ?)
   - why ?
   - <https://github.com/nextcloud/all-in-one/discussions/3487>
 
@@ -137,8 +150,8 @@
 ### Docker on ZFS
 
 ```bash
-sudo service docker stop
 sudo zfs create -o com.sun:auto-snapshot=false tank/docker
+sudo service docker stop
 sudo mv /var/lib/docker/* /tank/docker/
 sudo rm -rf /var/lib/docker/
 sudo ln -s /tank/docker/ /var/lib/docker
