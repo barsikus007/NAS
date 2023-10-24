@@ -84,9 +84,10 @@
   - jellyfin acceleration
     - <https://hub.docker.com/r/jjm2473/jellyfin-mpp>
     - <https://launchpad.net/~liujianfeng1994/+archive/ubuntu/rockchip-multimedia>
-  - `-v /etc/localtime:/etc/localtime:ro`
-  - `${APPDATA_VOLUME}/transmission/:/config/` remove
-  - ldap organizr or/and nextcloud or/and jellyfin
+  - ldap
+    - organizr
+    - nextcloud
+    - jellyfin
   - patchers
     - `apps/` patcher with `.env` values
     - `{$APPDATA_VOLUME}/` patcher with `.env` values
@@ -117,7 +118,7 @@
   - <https://github.com/fallenbagel/jellyseerr>
   - <https://www.photoprism.app>
 - software late
-  - [Docker on ZFS](.#docker-on-zfs)
+  - [Docker on ZFS](./#docker-on-zfs)
   - fail2ban
     - [organizr](https://docs.organizr.app/features/fail2ban-integration)
     - [nextcloud](https://docs.nextcloud.com/server/stable/admin_manual/installation/harden_server.html#setup-fail2ban)
@@ -131,6 +132,8 @@
 - readme roadmap
   - PBR section
   - device specific section
+    - tubesync volume due to bad SATA HAT software
+      - or <https://github.com/meeb/tubesync/blob/main/docs/other-database-backends.md>
   - check for grammar issues
 - [podman](https://podman.io) migration
   - (faster than docker ?)

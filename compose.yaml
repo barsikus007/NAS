@@ -374,7 +374,8 @@ services:
     #   - 4848:4848
     volumes:
       - /etc/localtime:/etc/localtime:ro
-      - ${APPDATA_VOLUME?}/tubesync/:/config/
+      # - ${APPDATA_VOLUME?}/tubesync/:/config/
+      - tubesync:/config/
       - ${STORAGE_VOLUME?}/downloads/media/youtube/:/downloads/
     env_file:
       - lscr.env
@@ -576,3 +577,4 @@ volumes:
     name: nextcloud_aio_mastercontainer # This line is not allowed to be changed as otherwise the built-in backup solution will not work
   openldap_data:
     driver: local
+  tubesync:
