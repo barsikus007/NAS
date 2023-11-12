@@ -170,7 +170,6 @@ services:
     # networks: # Is needed when you want to create the nextcloud-aio network with ipv6-support using this file, see the network config at the bottom of the file
       # - nextcloud-aio # Is needed when you want to create the nextcloud-aio network with ipv6-support using this file, see the network config at the bottom of the file
     volumes:
-      - /etc/localtime:/etc/localtime:ro
       - nextcloud_aio_mastercontainer:/mnt/docker-aio-config/ # This line is not allowed to be changed as otherwise the built-in backup solution will not work
       - /var/run/docker.sock:/var/run/docker.sock:ro # May be changed on macOS, Windows or docker rootless. See the applicable documentation. If adjusting, don't forget to also set 'WATCHTOWER_DOCKER_SOCKET_PATH'!
     labels:
@@ -194,6 +193,8 @@ services:
       # - 9091:9091
       - 51413:51413
       - 51413:51413/udp
+    healthcheck:
+      test: curl http://localhost:9091 || exit 1
     # https://github.com/linuxserver/docker-mods/tree/transmission-env-var-settings
     # https://github.com/linuxserver/docker-mods/tree/transmission-transmissionic
     environment:
@@ -232,6 +233,9 @@ services:
       - 8096:8096
       - 1900:1900/udp
       - 7359:7359/udp
+    healthcheck:
+      test: curl http://localhost:8096/health || exit 1
+      retries: 6
     environment:
       - JELLYFIN_PublishedServerUrl=${LAN_HOST?}
     env_file:
@@ -239,9 +243,12 @@ services:
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - ${APPDATA_VOLUME?}/jellyfin/:/config/
+      - ${STORAGE_VOLUME?}/downloads/media/youtube/:/data/youtube/
       - ${STORAGE_VOLUME?}/downloads/media/tvshows/:/data/tvshows/
       - ${STORAGE_VOLUME?}/downloads/media/movies/:/data/movies/
       - ${STORAGE_VOLUME?}/downloads/media/music/:/data/music/
+      - /usr/bin/ffmpeg:/usr/lib/jellyfin-ffmpeg-custom/ffmpeg:ro
+      - /usr/bin/ffprobe:/usr/lib/jellyfin-ffmpeg-custom/ffprobe:ro
     devices:
       - /dev/dri/card0
       - /dev/dri/card1
@@ -279,6 +286,8 @@ services:
     restart: unless-stopped
     # ports:
     #   - 9696:9696
+    healthcheck:
+      test: curl http://localhost:9696 || exit 1
     env_file:
       - lscr.env
     volumes:

@@ -65,7 +65,7 @@
     - `${STORAGE_VOLUME}/downloads/media` for *arrs and jellyfin media
 - Lidarr disabled due to unusable use case for me
   - If you need album release software, then uncomment `services.lidarr` section in `compose.yaml`
-- Transmission alt speed enabled due to broken pcie on rock-3a
+- Transmission alt speed enabled due to broken pcie on rock-3a to reduce overload
 
 ## TODO
 
@@ -82,8 +82,16 @@
     - <https://shop.allnetchina.cn/products/rtc-battery-for-rock-pi-4>
 - software
   - jellyfin acceleration
+    - `/usr/lib/jellyfin-ffmpeg-custom/ffmpeg` -> <https://media.ogurez.duckdns.org/web/index.html#!/encodingsettings.html>
     - <https://hub.docker.com/r/jjm2473/jellyfin-mpp>
     - <https://launchpad.net/~liujianfeng1994/+archive/ubuntu/rockchip-multimedia>
+      - sudo add-apt-repository ppa:liujianfeng1994/rockchip-multimedia -y
+      - sudo apt update -y
+      - sudo apt dist-upgrade -y
+      - sudo apt install rockchip-multimedia-config -y
+      - sudo apt install ffmpeg -y
+      - sudo apt install libv4l-rkmpp v4l-utils -y
+    - nextcloud `NEXTCLOUD_ENABLE_DRI_DEVICE`
   - ldap
     - organizr
     - nextcloud
@@ -95,17 +103,15 @@
   - healthchecks ?
     - flaresolverr
     - glances
-    - jellyfin
     - lum
     - openldap
     - portainer
-    - prowlarr
     - radarr
     - scrutiny
     - sonarr
     - traefik
-    - transmission
     - whoami
+  - nextcloud `traefik.http.middlewares.tubesync.headers.contentSecurityPolicy: frame-ancestors ${HOST?}`
 - alternate software
   - [seafile](https://www.seafile.com/en/home/) ? (check nextcloud speed)
   - [syncthing](https://syncthing.net) ? (check cloud usecase)
@@ -143,6 +149,8 @@
 ## ZFS cheatsheet
 
 ### Add scrub schedule (`0 3 * * 0 /sbin/zpool scrub tank`)
+
+TODO -1 crontab every day; remove /sbin/ ?
 
 `sudo crontab -l | cat - <(echo "0 3 * * 0 /sbin/zpool scrub tank") | sudo crontab -`
 
