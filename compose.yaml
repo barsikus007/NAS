@@ -90,6 +90,7 @@ services:
     environment:
       - TRAEFIK_ENTRYPOINTS_WEBSECURE_HTTP_TLS_DOMAINS_MAIN=${HOST?}
       - TRAEFIK_ENTRYPOINTS_WEBSECURE_HTTP_TLS_DOMAINS_SANS=*.${HOST?}
+      # passes the specified email to "ddnsResolver"
       - TRAEFIK_CERTIFICATESRESOLVERS_DDNSRESOLVER_ACME_EMAIL=${HOST_EMAIL?}
       - DUCKDNS_TOKEN=${DUCKDNS_TOKEN?}
     volumes:
@@ -259,6 +260,25 @@ services:
       traefik.http.services.jellyfin.loadbalancer.server.port: 8096
       traefik.http.routers.jellyfin.entrypoints: webSecure
       traefik.http.routers.jellyfin.tls.certresolver: ddnsResolver
+    depends_on:
+      - traefik
+
+  vaultwarden:
+    image: vaultwarden/server:latest
+    container_name: vaultwarden
+    restart: unless-stopped
+    # ports:
+    #   - 80:80
+    env_file:
+      - lscr.env
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ${APPDATA_VOLUME?}/vaultwarden/:/data/
+    labels:
+      traefik.enable: true
+      traefik.http.routers.vaultwarden.rule: Host(`bitwarden.${HOST?}`)
+      traefik.http.routers.vaultwarden.entrypoints: webSecure
+      traefik.http.routers.vaultwarden.tls.certresolver: ddnsResolver
     depends_on:
       - traefik
 

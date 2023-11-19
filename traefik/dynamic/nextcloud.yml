@@ -22,6 +22,7 @@ http:
         hostsProxyHeaders:
           - "X-Forwarded-Host"
         referrerPolicy: "same-origin"
+        contentSecurityPolicy: "frame-ancestors {{ env "TRAEFIK_ENTRYPOINTS_WEBSECURE_HTTP_TLS_DOMAINS_MAIN" }}"
 
     https-redirect:
       redirectscheme:

@@ -14,8 +14,12 @@
 8. Wait for containers to be in a healthy state, then stop some of them to patch `docker compose stop organizr && ./bin/appdata_patcher.sh && docker compose up -d organizr`
 9. Configure web applications manually as indicated in the section below
 
-- P.S. Do not forget to adapt jellyfin compose config to your hardware decoders
-- P.S. Do not forget to add your disks to scrutiny compose config
+### P.S
+
+- duckdns is hardcoded, to use other provider, change `.env`, `compose.yaml` and `traefik/traefik.yml`
+- devices: compose sections
+  - adapt jellyfin compose config to your hardware decoders
+  - add your disks to scrutiny compose config
 - TODO `subo bash -c 'echo "ignore-warnings ARM64-COW-BUG" >> ${APPDATA_VOLUME?}/gitlab/data/redis/redis.conf'`
 
 ## GUI configuration
@@ -23,11 +27,16 @@
 - LDAP (lum.${HOST}/setup)
   - `./bin/config_patcher.sh && sudo cp -r patched_apps/* ${APPDATA_VOLUME}/`
   - `docker compose down openldap && ./bin/config_patcher.sh && sudo cp -r patched_apps/* /tank/apps/ && docker compose up -d openldap`
+- NextCloud AIO (aio.cloud.${HOST})
+  - Specify cloud.${HOST} in certain field
+  - /tank/backup TODO
+  - Change TZ
 - NextCloud (cloud.${HOST})
   - Enable `External storage support` app
   - LDAP TODO
 - Organizr
   - LDAP `${HOST}/#settings-settings-main` => `Authentication` => set `Bind Password`
+  - Setup tabs TODO
 - JellyFin
   - TODO
 - *arr
@@ -73,14 +82,17 @@
   - [rockpi-penta soft](https://github.com/barsikus007/rockpi-penta)
   - button
     - <https://github.com/barsikus007/rockpi-penta/blob/ac1a4a20e224f1166b28bf155eb1cf322610d2f8/usr/bin/rockpi-penta/misc.py#L183>
-  - top fan 40x10mm 3-pin RYB and cut upper ring
-    - <https://www.ozon.ru/product/ventilyator-exegate-40x40x10mm-5500rpm-ex166186rus-1125378282>
+  - top PWM fan 5V 40x10mm 3-pin RYB and cut upper ring
   - heatsink or microfan on cpu
     - <https://shop.allnetchina.cn/products/heat-sink-for-rock-3a>
     - <https://www.ozon.ru/search/?text=raspberry+pi+радиатор&from_global=true>
   - RTC battery
     - <https://shop.allnetchina.cn/products/rtc-battery-for-rock-pi-4>
 - software
+  - `openldap_data:/bitnami/openldap/`
+  - `tubesync:/config/`
+  - move samba and traefik to brand new dir
+  - maybe add separate env file for acme provider
   - jellyfin acceleration
     - `/usr/lib/jellyfin-ffmpeg-custom/ffmpeg` -> <https://media.ogurez.duckdns.org/web/index.html#!/encodingsettings.html>
     - <https://hub.docker.com/r/jjm2473/jellyfin-mpp>
@@ -111,7 +123,6 @@
     - sonarr
     - traefik
     - whoami
-  - nextcloud `traefik.http.middlewares.tubesync.headers.contentSecurityPolicy: frame-ancestors ${HOST?}`
 - alternate software
   - [seafile](https://www.seafile.com/en/home/) ? (check nextcloud speed)
   - [syncthing](https://syncthing.net) ? (check cloud usecase)
@@ -148,11 +159,11 @@
 
 ## ZFS cheatsheet
 
-### Add scrub schedule (`0 3 * * 0 /sbin/zpool scrub tank`)
+### Add scrub schedule (`0 3 * * * /sbin/zpool scrub tank`)
 
-TODO -1 crontab every day; remove /sbin/ ?
-
-`sudo crontab -l | cat - <(echo "0 3 * * 0 /sbin/zpool scrub tank") | sudo crontab -`
+```bash
+sudo crontab -l | cat - <(echo "0 3 * * * /sbin/zpool scrub tank") | sudo crontab -
+```
 
 ### Add auto snapshot package
 
@@ -162,10 +173,16 @@ TODO -1 crontab every day; remove /sbin/ ?
 
 ```bash
 sudo zfs create -o com.sun:auto-snapshot=false tank/docker
+docker compose stop
 sudo service docker stop
-sudo mv /var/lib/docker/* /tank/docker/
-sudo rm -rf /var/lib/docker/
-sudo ln -s /tank/docker/ /var/lib/docker
+nvim /etc/docker/daemon.json
+# add theese lines
+# {
+#   "storage-driver": "zfs"
+# }
+# backup necessary docker data and then remove
+sudo rm -rf /var/lib/docker
+sudo ln -s /tank/docker /var/lib/docker
 sudo service docker start
 ```
 

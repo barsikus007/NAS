@@ -25,9 +25,4 @@ echo "'ldapType' => '2'"
 sed "s/'ldapType' => '1'/'ldapType' => '2'/g" -i "$FILE"
 echo
 echo
-# fuck me I am done with that shit
-echo Patching nextcloud to allow its usage in organizr iframe
-docker exec nextcloud-aio-nextcloud sed ":a;N;\$!ba;s/protected \$allowedFrameAncestors = \[\n\t\t'\\\'self\\\'',\n\t];/protected \$allowedFrameAncestors = \[\n\t\t'\\\'self\\\'',\n\t\t'$HOST',\n\t\t'www.$HOST',\n\t];/g" -i /var/www/html/lib/public/AppFramework/Http/ContentSecurityPolicy.php
-echo
-echo
 echo All files was patched successfuly

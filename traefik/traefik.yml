@@ -35,13 +35,12 @@ certificatesResolvers:
       dnsChallenge:
         # Tell which provider to use
         provider: duckdns
-        # TODO uncomment to debug ssl
-        # caserver: https://acme-staging-v02.api.letsencrypt.org/directory
-        # https://www.reddit.com/r/Traefik/comments/149dplx/traefik_duckdns_dns_challenge_problem/
+        # TODO duckdns fix https://www.reddit.com/r/Traefik/comments/149dplx/traefik_duckdns_dns_challenge_problem/
         disablePropagationCheck: true
-      # The email to provide to let's encrypt
+      # TODO uncomment to debug ssl
+      # caserver: https://acme-staging-v02.api.letsencrypt.org/directory
       # Tell to store the certificate on a path under our volume
       storage: /letsencrypt/acme.json
-# allow nextcloud-aio-mastercontainer work
+# allow nextcloud-aio-mastercontainer to work
 serversTransport:
   insecureSkipVerify: true
