@@ -414,7 +414,8 @@ services:
       traefik.http.routers.tubesync.entrypoints: webSecure
       traefik.http.routers.tubesync.tls.certresolver: ddnsResolver
 
-      traefik.http.routers.tubesync.middlewares: auth@file
+      traefik.http.middlewares.tubesync-iframe.headers.contentSecurityPolicy: frame-ancestors ${HOST?}
+      traefik.http.routers.tubesync.middlewares: auth@file, tubesync-iframe
     depends_on:
       - organizr
 

@@ -20,6 +20,10 @@
 - devices: compose sections
   - adapt jellyfin compose config to your hardware decoders
   - add your disks to scrutiny compose config
+- weak:
+  - rm `tubesync:/config/` line
+    - uncomment `${APPDATA_VOLUME?}/tubesync/:/config/` line
+  - rm `TRANSMISSION_ALT_SPEED_ENABLED` line
 - TODO `subo bash -c 'echo "ignore-warnings ARM64-COW-BUG" >> ${APPDATA_VOLUME?}/gitlab/data/redis/redis.conf'`
 
 ## GUI configuration
@@ -90,7 +94,6 @@
     - <https://shop.allnetchina.cn/products/rtc-battery-for-rock-pi-4>
 - software
   - `openldap_data:/bitnami/openldap/`
-  - `tubesync:/config/`
   - move samba and traefik to brand new dir
   - maybe add separate env file for acme provider
   - jellyfin acceleration
@@ -149,7 +152,7 @@
 - readme roadmap
   - PBR section
   - device specific section
-    - tubesync volume due to bad SATA HAT software
+    - tubesync volume due to bad SATA HAT software (weak)
       - or <https://github.com/meeb/tubesync/blob/main/docs/other-database-backends.md>
   - check for grammar issues
 - [podman](https://podman.io) migration
