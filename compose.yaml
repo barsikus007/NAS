@@ -203,9 +203,8 @@ services:
       - TRANSMISSION_WEB_HOME=/transmissionic/
       # - TRANSMISSION_WEB_HOME=/transmission-web-control/
       # - TRANSMISSION_WEB_HOME=/flood-for-transmission/
-      - TRANSMISSION_ALT_SPEED_DOWN=2048
-      - TRANSMISSION_ALT_SPEED_UP=256
-      - TRANSMISSION_ALT_SPEED_ENABLED=true
+      # - TRANSMISSION_ALT_SPEED_DOWN=2048
+      # - TRANSMISSION_ALT_SPEED_UP=256
     env_file:
       - lscr.env
     volumes:
@@ -248,12 +247,16 @@ services:
       - ${STORAGE_VOLUME?}/downloads/media/tvshows/:/data/tvshows/
       - ${STORAGE_VOLUME?}/downloads/media/movies/:/data/movies/
       - ${STORAGE_VOLUME?}/downloads/media/music/:/data/music/
-      - /usr/bin/ffmpeg:/usr/lib/jellyfin-ffmpeg-custom/ffmpeg:ro
-      - /usr/bin/ffprobe:/usr/lib/jellyfin-ffmpeg-custom/ffprobe:ro
+
+      # - /usr/bin/ffmpeg:/usr/lib/jellyfin-ffmpeg/ffmpeg:ro
+      # - /usr/bin/ffprobe:/usr/lib/jellyfin-ffmpeg/ffprobe:ro
+      # - /usr/lib/aarch64-linux-gnu/:/usr/lib/aarch64-linux-gnu/:ro
+      # - /etc/alternatives/:/etc/alternatives/:ro
     devices:
-      - /dev/dri/card0
-      - /dev/dri/card1
-      - /dev/dri/renderD128
+      - /dev/rga
+      - /dev/dri
+      - /dev/dma_heap
+      - /dev/mpp_service
     labels:
       traefik.enable: true
       traefik.http.routers.jellyfin.rule: Host(`media.${HOST?}`)
@@ -403,8 +406,7 @@ services:
     #   - 4848:4848
     volumes:
       - /etc/localtime:/etc/localtime:ro
-      # - ${APPDATA_VOLUME?}/tubesync/:/config/
-      - tubesync:/config/
+      - ${APPDATA_VOLUME?}/tubesync/:/config/
       - ${STORAGE_VOLUME?}/downloads/media/youtube/:/downloads/
     env_file:
       - lscr.env
@@ -510,7 +512,8 @@ services:
       - lscr.env
     volumes:
       - /etc/localtime:/etc/localtime:ro
-      - ${APPDATA_VOLUME?}/samba/:/data/
+      - ./apps/samba/config.yml:/data/config.yml:ro
+      - ${APPDATA_VOLUME?}/samba/private/:/var/lib/samba/private/
       - ${STORAGE_VOLUME?}/:/samba/storage/
 # </LocalServices>
 
@@ -607,4 +610,3 @@ volumes:
     name: nextcloud_aio_mastercontainer # This line is not allowed to be changed as otherwise the built-in backup solution will not work
   openldap_data:
     driver: local
-  tubesync:

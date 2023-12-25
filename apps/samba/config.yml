@@ -19,4 +19,4 @@ share:
     writelist: ${USER}
     veto: no
     hidefiles: /_*/
-    recycle: yes
+    recycle: no

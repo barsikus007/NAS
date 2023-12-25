@@ -18,12 +18,8 @@
 
 - duckdns is hardcoded, to use other provider, change `.env`, `compose.yaml` and `traefik/traefik.yml`
 - devices: compose sections
-  - adapt jellyfin compose config to your hardware decoders
-  - add your disks to scrutiny compose config
-- weak:
-  - rm `tubesync:/config/` line
-    - uncomment `${APPDATA_VOLUME?}/tubesync/:/config/` line
-  - rm `TRANSMISSION_ALT_SPEED_ENABLED` line
+  - adapt `jellyfin` compose config to your hardware decoders
+  - add your disks to `scrutiny` compose config
 - TODO `subo bash -c 'echo "ignore-warnings ARM64-COW-BUG" >> ${APPDATA_VOLUME?}/gitlab/data/redis/redis.conf'`
 
 ## GUI configuration
@@ -88,24 +84,28 @@
     - <https://github.com/barsikus007/rockpi-penta/blob/ac1a4a20e224f1166b28bf155eb1cf322610d2f8/usr/bin/rockpi-penta/misc.py#L183>
   - top PWM fan 5V 40x10mm 3-pin RYB and cut upper ring
   - heatsink or microfan on cpu
+    - height ~15mm
+      - 19x19mm cpu
+      - 15x10mm ram
     - <https://shop.allnetchina.cn/products/heat-sink-for-rock-3a>
     - <https://www.ozon.ru/search/?text=raspberry+pi+радиатор&from_global=true>
   - RTC battery
     - <https://shop.allnetchina.cn/products/rtc-battery-for-rock-pi-4>
 - software
+  - <https://netpoint-dc.com/blog/zfs-caching-arc-l2arc-linux/>
+  - speedtest
   - `openldap_data:/bitnami/openldap/`
   - move samba and traefik to brand new dir
   - maybe add separate env file for acme provider
   - jellyfin acceleration
     - `/usr/lib/jellyfin-ffmpeg-custom/ffmpeg` -> <https://media.ogurez.duckdns.org/web/index.html#!/encodingsettings.html>
     - <https://hub.docker.com/r/jjm2473/jellyfin-mpp>
+    - <https://forum.radxa.com/t/rk3588-kodi-rkmpp-accelerated-decoding-working-out-of-box/12785/33>
+    - <https://github.com/jellyfin/jellyfin-ffmpeg/issues/34>
     - <https://launchpad.net/~liujianfeng1994/+archive/ubuntu/rockchip-multimedia>
       - sudo add-apt-repository ppa:liujianfeng1994/rockchip-multimedia -y
       - sudo apt update -y
-      - sudo apt dist-upgrade -y
-      - sudo apt install rockchip-multimedia-config -y
-      - sudo apt install ffmpeg -y
-      - sudo apt install libv4l-rkmpp v4l-utils -y
+      - sudo apt install rockchip-multimedia-config ffmpeg -y
     - nextcloud `NEXTCLOUD_ENABLE_DRI_DEVICE`
   - ldap
     - organizr
@@ -160,43 +160,7 @@
   - why ?
   - <https://github.com/nextcloud/all-in-one/discussions/3487>
 
-## ZFS cheatsheet
-
-### Add scrub schedule (`0 3 * * * /sbin/zpool scrub tank`)
-
-```bash
-sudo crontab -l | cat - <(echo "0 3 * * * /sbin/zpool scrub tank") | sudo crontab -
-```
-
-### Add auto snapshot package
-
-`sudo apt install zfs-auto-snapshot -y`
-
-### Docker on ZFS
-
-```bash
-sudo zfs create -o com.sun:auto-snapshot=false tank/docker
-docker compose stop
-sudo service docker stop
-nvim /etc/docker/daemon.json
-# add theese lines
-# {
-#   "storage-driver": "zfs"
-# }
-# backup necessary docker data and then remove
-sudo rm -rf /var/lib/docker
-sudo ln -s /tank/docker /var/lib/docker
-sudo service docker start
-```
-
-- TODO 0 maybe need to create docker service trigger on ZFS mount?
-  - <https://www.reddit.com/r/docker/comments/my6p90/docker_zfs_storage_driver_vs_storing_docker_data/>
-  - <https://www.reddit.com/r/zfs/comments/10e0rkx/for_anyone_using_zfsol_with_docker/>
-
-### TODO 1
-
-- weekly cron to backup compressed backup of zpool to 5th 2tb disk
-- backup / and /boot volumes disk (emmc)
+## [ZFS cheatsheet](https://github.com/barsikus007/config/blob/master/linux/cheatsheet_server.md#zfs)
 
 ## References
 
