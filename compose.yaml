@@ -1,53 +1,33 @@
 services:
 # <LDAP>
-  openldap:
-    container_name: openldap
-    restart: unless-stopped
-    image: bitnami/openldap:latest
+  lldap:
+    container_name: lldap
+    image: lldap/lldap:stable
     # ports:
-    #   - 1389:389
+      # For LDAP
+      # - 3890:389
+      # For LDAPS (LDAP Over SSL), enable port if LLDAP_LDAPS_OPTIONS__ENABLED set true, look env below
+      #- 6360:6360
+      # For the web front-end
+      # - 17170:17170
     environment:
-      - LDAP_PORT_NUMBER=389
-      - LDAP_ROOT=${LDAP_HOST?}
-      - LDAP_ADMIN_USERNAME=${LDAP_BIND_ADMIN?}
-      - LDAP_ADMIN_PASSWORD=${LDAP_BIND_ADMIN_PASSWORD?}
-      # - BITNAMI_DEBUG=true
-      - LDAP_ALLOW_ANON_BINDING=no
-      - LDAP_SKIP_DEFAULT_TREE=yes
-      - LDAP_EXTRA_SCHEMAS=cosine,inetorgperson
+      - LLDAP_LDAP_PORT=389
+      - LLDAP_LDAP_USER_DN=${LDAP_BIND_ADMIN?}
+      - LLDAP_LDAP_USER_PASS=${LDAP_BIND_ADMIN_PASSWORD?}
+      - LLDAP_LDAP_BASE_DN=${LDAP_HOST?}
+    env_file:
+      - lscr.env
     volumes:
       - /etc/localtime:/etc/localtime:ro
-      - ${APPDATA_VOLUME?}/openldap/schemas/:/schemas/:ro
-      - ${APPDATA_VOLUME?}/openldap/ldifs/:/ldifs/:ro
-      - openldap_data:/bitnami/openldap/
-
-  ldap-user-manager:
-    container_name: lum
-    restart: unless-stopped
-    image: wheelybird/ldap-user-manager
-    # ports:
-    #   - 1380:80
-    environment:
-      - SERVER_HOSTNAME=lum.${HOST?}
-      - NO_HTTPS=true
-      - LDAP_REQUIRE_STARTTLS=false
-      - LDAP_IGNORE_CERT_ERRORS=true
-      # - LDAP_DEBUG=true
-      - LDAP_URI=ldap://openldap
-      - LDAP_BASE_DN=${LDAP_HOST?}
-      - LDAP_ADMINS_GROUP=admins
-      - LDAP_ADMIN_BIND_DN=cn=${LDAP_BIND_ADMIN?},${LDAP_HOST?}
-      - LDAP_ADMIN_BIND_PWD=${LDAP_BIND_ADMIN_PASSWORD?}
-      - USERNAME_FORMAT={first_name}
-    volumes:
-      - /etc/localtime:/etc/localtime:ro
+      - ${APPDATA_VOLUME?}/lldap/:/data/
     labels:
       traefik.enable: true
-      traefik.http.routers.lum.rule: Host(`lum.${HOST?}`)
-      traefik.http.routers.lum.entrypoints: webSecure
-      traefik.http.routers.lum.tls.certresolver: ddnsResolver
+      traefik.http.routers.lldap.rule: Host(`lldap.${HOST?}`)
+      traefik.http.services.lldap.loadbalancer.server.port: 17170
+      traefik.http.routers.lldap.entrypoints: webSecure
+      traefik.http.routers.lldap.tls.certresolver: ddnsResolver
 
-      traefik.http.routers.lum.middlewares: auth@file
+      traefik.http.routers.lldap.middlewares: auth@file
     depends_on:
       - organizr
 
@@ -57,8 +37,8 @@ services:
   #   restart: unless-stopped
   #   image: ltbproject/self-service-password:latest
   #   environment:
-  #     - LDAP_URL=ldap://openldap
-  #     - LDAP_BINDDN=cn=${LDAP_BIND_ADMIN?},${LDAP_HOST?}
+  #     - LDAP_URL=ldap://lldap
+  #     - LDAP_BINDDN=cn=${LDAP_BIND_ADMIN?},ou=people,${LDAP_HOST?}
   #     - LDAP_BINDPW=${LDAP_BIND_ADMIN_PASSWORD?}
   #     - LDAP_BASE=ou=people,${LDAP_HOST?}
   #     - PWD_MIN_LENGTH=8
@@ -100,7 +80,7 @@ services:
       # So that Traefik can listen to the Docker events
       - /var/run/docker.sock:/var/run/docker.sock:ro
       # Traefik static and dynamic configs
-      - ./traefik/:/etc/traefik/:ro
+      - ./apps/traefik/:/etc/traefik/:ro
 
   whoami:
     image: traefik/whoami:latest
@@ -462,14 +442,22 @@ services:
         gitlab_rails['ldap_servers'] = {
           'main' => {
             'label' => 'NAS',
-            'host' =>  'openldap',
+            'host' =>  'lldap',
             'port' => 389,
             'uid' => 'uid',
             'base' => 'ou=people,${LDAP_HOST?}',
-            'bind_dn' => 'cn=${LDAP_BIND_ADMIN?},${LDAP_HOST?}',
-            'password' => '${LDAP_BIND_ADMIN_PASSWORD?}',
             'encryption' => 'plain',
-            # 'user_filter' => '(memberOf=cn=developers,ou=groups,${LDAP_HOST?})',
+            'bind_dn' => 'uid=${LDAP_BIND_ADMIN?},ou=people,${LDAP_HOST?}',
+            'password' => '${LDAP_BIND_ADMIN_PASSWORD?}',
+            'active_directory' => false,
+            'user_filter' => '(&(objectclass=person)(memberof=cn=git_user,ou=groups,${LDAP_HOST?}))',
+            'attributes' => {
+              'username' => 'uid',
+              'email' => 'mail',
+              'name' => 'displayName',
+              'first_name' => 'givenName',
+              'last_name' => 'sn'
+            }
           }
         }
     volumes:

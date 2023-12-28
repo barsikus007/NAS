@@ -7,7 +7,7 @@
 3. Create `APPDATA_VOLUME` and `STORAGE_VOLUME` folders/mountpoints
 4. Patch `apps/` configs with `./bin/config_patcher.sh` (patch will be based on `.env` values)
 5. Copy `apps/` to your folder specified in `APPDATA_VOLUME` env var
-6. Open `80`, `443` (traefik entrypoints) and `3478` (nextcloud-talk entrypoint) ports
+6. Open `80`, `443` (traefik entrypoints), `3478` (nextcloud-talk entrypoint) ports and `51413` (transmission seeding)
 7. `docker compose up -d --build && sudo chown -R --reference=${HOME} ${APPDATA_VOLUME}/*`
    1. Use `docker compose up -d --build` to start
    2. Change the ownership of the files under `APPDATA_VOLUME` (e.g. `sudo chown -R --reference=${HOME} ${APPDATA_VOLUME}/*`) immediately after volume creation
@@ -24,16 +24,20 @@
 
 ## GUI configuration
 
-- LDAP (lum.${HOST}/setup)
-  - `./bin/config_patcher.sh && sudo cp -r patched_apps/* ${APPDATA_VOLUME}/`
-  - `docker compose down openldap && ./bin/config_patcher.sh && sudo cp -r patched_apps/* /tank/apps/ && docker compose up -d openldap`
-- NextCloud AIO (aio.cloud.${HOST})
-  - Specify cloud.${HOST} in certain field
-  - /tank/backup TODO
+- LLDAP (lldap.${HOST})
+  - Setup Organizr to pass auth on lldap endpoint
+  - Create users
+  - TODO
+- NextCloud AIO `aio.cloud.${HOST}`
+  - Specify `cloud.${HOST}` in certain field
   - Change TZ
+  - Specify apps to install and install
+  - Specify backup location `/tank/backup` and generate password
 - NextCloud (cloud.${HOST})
   - Enable `External storage support` app
   - LDAP TODO
+  - TODO allow login to admin
+  - Create backup in AIO after setup
 - Organizr
   - LDAP `${HOST}/#settings-settings-main` => `Authentication` => set `Bind Password`
   - Setup tabs TODO
@@ -94,7 +98,6 @@
 - software
   - <https://netpoint-dc.com/blog/zfs-caching-arc-l2arc-linux/>
   - speedtest
-  - `openldap_data:/bitnami/openldap/`
   - move samba and traefik to brand new dir
   - maybe add separate env file for acme provider
   - jellyfin acceleration
@@ -102,6 +105,7 @@
     - <https://hub.docker.com/r/jjm2473/jellyfin-mpp>
     - <https://forum.radxa.com/t/rk3588-kodi-rkmpp-accelerated-decoding-working-out-of-box/12785/33>
     - <https://github.com/jellyfin/jellyfin-ffmpeg/issues/34>
+      - <https://github.com/jellyfin/jellyfin-ffmpeg/pull/318>
     - <https://launchpad.net/~liujianfeng1994/+archive/ubuntu/rockchip-multimedia>
       - sudo add-apt-repository ppa:liujianfeng1994/rockchip-multimedia -y
       - sudo apt update -y
@@ -118,8 +122,6 @@
   - healthchecks ?
     - flaresolverr
     - glances
-    - lum
-    - openldap
     - portainer
     - radarr
     - scrutiny
@@ -148,7 +150,8 @@
     - inner
     - outer
   - change lcdr UID GID
-  - change passwds and ssh-rsa after complete setup
+  - change passwds and ssh-rsa after complete setup and use docker secrets
+  - secure whole server with vpn or firewall
 - readme roadmap
   - PBR section
   - device specific section
