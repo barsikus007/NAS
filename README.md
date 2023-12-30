@@ -5,14 +5,13 @@
 1. Install docker (ex: `curl -fsSL https://get.docker.com | sh`)
 2. Copy `example.env` to `.env` and edit (also edit `lscr.env`)
 3. Create `APPDATA_VOLUME` and `STORAGE_VOLUME` folders/mountpoints
-4. Patch `apps/` configs with `./bin/config_patcher.sh` (patch will be based on `.env` values)
-5. Copy `apps/` to your folder specified in `APPDATA_VOLUME` env var
-6. Open `80`, `443` (traefik entrypoints), `3478` (nextcloud-talk entrypoint) ports and `51413` (transmission seeding)
-7. `docker compose up -d --build && sudo chown -R --reference=${HOME} ${APPDATA_VOLUME}/*`
-   1. Use `docker compose up -d --build` to start
+4. Copy `apps/` to your folder specified in `APPDATA_VOLUME` env var
+5. Open `80`, `443` (traefik entrypoints), `3478` (nextcloud-talk entrypoint) and `51413` (transmission seeding) ports in router
+6. `docker compose up -d --build && sudo chown -R --reference=${HOME} ${APPDATA_VOLUME}/*`
+   1. Use `docker compose up -d --build --wait` or `./bin/graceful_start.sh` to start
    2. Change the ownership of the files under `APPDATA_VOLUME` (e.g. `sudo chown -R --reference=${HOME} ${APPDATA_VOLUME}/*`) immediately after volume creation
-8. Wait for containers to be in a healthy state, then stop some of them to patch `docker compose stop organizr && ./bin/appdata_patcher.sh && docker compose up -d organizr`
-9. Configure web applications manually as indicated in the section below
+7. Wait for containers to be in a healthy state, then stop some of them to patch `docker compose stop organizr && ./bin/appdata_patcher.sh && docker compose up -d organizr`
+8. Configure web applications manually as indicated in the section below
 
 ### P.S
 
@@ -24,8 +23,8 @@
 
 ## GUI configuration
 
-- LLDAP (lldap.${HOST})
-  - Setup Organizr to pass auth on lldap endpoint
+- LLDAP `lldap.${HOST}`
+  - Setup Organizr to pass auth on lldap endpoint if needed (TODO)
   - Create users
   - TODO
 - NextCloud AIO `aio.cloud.${HOST}`
@@ -33,16 +32,28 @@
   - Change TZ
   - Specify apps to install and install
   - Specify backup location `/tank/backup` and generate password
-- NextCloud (cloud.${HOST})
-  - Enable `External storage support` app
-  - LDAP TODO
-  - TODO allow login to admin
-  - Create backup in AIO after setup
-- Organizr
-  - LDAP `${HOST}/#settings-settings-main` => `Authentication` => set `Bind Password`
+- NextCloud `cloud.${HOST}`
+  - `/settings`
+    - `/apps/disabled`
+      - `/files_external` Enable `External storage support` app
+      - `/user_ldap`Enable `LDAP user and group backend` app
+    - `/admin/externalstorages`
+      - Storage;Local;None;/tank/storage;All users
+    - `/admin/ldap`
+      - [TODO](https://github.com/lldap/lldap/blob/main/example_configs/nextcloud.md)
+    - `/admin/overview` Create backup in AIO after setup
+- Organizr `${HOST}`
+  - LDAP `/#settings-settings-main` => `Authentication` => set `Bind Password`
   - Setup tabs TODO
-- JellyFin
-  - TODO
+- JellyFin `media.${HOST}`
+  - `/web/index.html#!`
+    - `/addplugin.html?name=LDAP%20Authentication`
+      - Install LDAP plugin
+      - `/dashboard.html` Shutdown (docker will reboot jellyfin)
+      - `/configurationpage?name=LDAP-Auth`
+      - [TODO](https://github.com/lldap/lldap/blob/main/example_configs/jellyfin.md)
+    - `/networking.html` Allow remote connections to this server
+  - TODO Add Media Libraries
 - *arr
   - TODO
 
@@ -52,11 +63,13 @@
   - 80, 443 traefik
     - 80 is redirected to 443
     - 443 refer to docker-hosted services
-      - nextcloud
-      - jellyfin
-      - organizr
-      - gitlab
-      - rest services uses organizr auth
+      - gitlab.${HOST} (TODO)
+      - whoami.${HOST} (for testing purposes)
+      - media.${HOST} -> jellyfin (for non-web apps)
+      - bitwarden.${HOST} -> vaultwarden (TODO)
+      - cloud.${HOST} -> nextcloud (TODO)
+      - auth.${HOST} -> authelia
+      - rest services use authelia auth
   - 3478 nextcloud-talk
   - 51413 transmission
 - LAN => docker network
@@ -96,12 +109,13 @@
   - RTC battery
     - <https://shop.allnetchina.cn/products/rtc-battery-for-rock-pi-4>
 - software
-  - <https://netpoint-dc.com/blog/zfs-caching-arc-l2arc-linux/>
+  - is stopping organizr needed for patching?
+  - why chown?
   - speedtest
   - move samba and traefik to brand new dir
   - maybe add separate env file for acme provider
   - jellyfin acceleration
-    - `/usr/lib/jellyfin-ffmpeg-custom/ffmpeg` -> <https://media.ogurez.duckdns.org/web/index.html#!/encodingsettings.html>
+    - `/usr/lib/jellyfin-ffmpeg-custom/ffmpeg` -> <https://media.${HOST}/web/index.html#!/encodingsettings.html>
     - <https://hub.docker.com/r/jjm2473/jellyfin-mpp>
     - <https://forum.radxa.com/t/rk3588-kodi-rkmpp-accelerated-decoding-working-out-of-box/12785/33>
     - <https://github.com/jellyfin/jellyfin-ffmpeg/issues/34>
@@ -140,18 +154,20 @@
   - <https://github.com/fallenbagel/jellyseerr>
   - <https://www.photoprism.app>
 - software late
-  - [Docker on ZFS](./#docker-on-zfs)
   - fail2ban
+    - [traefik](https://plugins.traefik.io/plugins/628c9ebcffc0cd18356a979f/fail2-ban)
     - [organizr](https://docs.organizr.app/features/fail2ban-integration)
     - [nextcloud](https://docs.nextcloud.com/server/stable/admin_manual/installation/harden_server.html#setup-fail2ban)
-    - [traefik](https://plugins.traefik.io/plugins/628c9ebcffc0cd18356a979f/fail2-ban)
-    - ldap ?
   - VPN (wireguard)
     - inner
     - outer
   - change lcdr UID GID
   - change passwds and ssh-rsa after complete setup and use docker secrets
   - secure whole server with vpn or firewall
+  - log level debug disable
+  - enable 2FA
+  - SMTP
+    - authelia
 - readme roadmap
   - PBR section
   - device specific section

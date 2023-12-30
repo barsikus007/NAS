@@ -1,7 +1,7 @@
 #!/bin/sh
 
 docker compose up -d --wait samba
-docker compose up -d --wait traefik organizr lldap nextcloud-aio-mastercontainer
+docker compose up -d --wait traefik organizr lldap authelia nextcloud-aio-mastercontainer
 docker compose up -d --wait whoami transmission jellyfin tubesync vaultwarden
 docker compose up -d --wait portainer watchtower glances scrutiny
 docker compose up -d --wait prowlarr flaresolverr radarr sonarr

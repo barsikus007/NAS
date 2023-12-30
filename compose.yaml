@@ -1,20 +1,23 @@
 services:
-# <LDAP>
+# <BASE>
   lldap:
-    container_name: lldap
     image: lldap/lldap:stable
+    container_name: lldap
+    restart: unless-stopped
     # ports:
       # For LDAP
       # - 3890:389
       # For LDAPS (LDAP Over SSL), enable port if LLDAP_LDAPS_OPTIONS__ENABLED set true, look env below
-      #- 6360:6360
+      # - 6360:6360
       # For the web front-end
       # - 17170:17170
     environment:
+      - LLDAP_HTTP_URL=https://lldap.${HOST?}
       - LLDAP_LDAP_PORT=389
-      - LLDAP_LDAP_USER_DN=${LDAP_BIND_ADMIN?}
-      - LLDAP_LDAP_USER_PASS=${LDAP_BIND_ADMIN_PASSWORD?}
       - LLDAP_LDAP_BASE_DN=${LDAP_HOST?}
+      - LLDAP_LDAP_USER_DN=${LDAP_BIND_ADMIN?}
+      - LLDAP_LDAP_USER_EMAIL=${HOST_EMAIL?}
+      - LLDAP_LDAP_USER_PASS=${LDAP_BIND_ADMIN_PASSWORD?}
     env_file:
       - lscr.env
     volumes:
@@ -27,31 +30,40 @@ services:
       traefik.http.routers.lldap.entrypoints: webSecure
       traefik.http.routers.lldap.tls.certresolver: ddnsResolver
 
-      traefik.http.routers.lldap.middlewares: auth@file
-    depends_on:
-      - organizr
+      traefik.http.routers.lldap.middlewares: authelia@docker
 
-  # no arm64 build :(
-  # ldap-ssp:
-  #   container_name: ssp
-  #   restart: unless-stopped
-  #   image: ltbproject/self-service-password:latest
-  #   environment:
-  #     - LDAP_URL=ldap://lldap
-  #     - LDAP_BINDDN=cn=${LDAP_BIND_ADMIN?},ou=people,${LDAP_HOST?}
-  #     - LDAP_BINDPW=${LDAP_BIND_ADMIN_PASSWORD?}
-  #     - LDAP_BASE=ou=people,${LDAP_HOST?}
-  #     - PWD_MIN_LENGTH=8
-  #     - PWD_MIN_LOWER=3
-  #     - PWD_MIN_DIGIT=2
-  #   volumes:
-  #     - /etc/localtime:/etc/localtime:ro
-  #   labels:
-  #     traefik.enable: true
-  #     traefik.http.routers.lum.rule: Host(`password.${HOST?}`)
-  #     traefik.http.routers.lum.entrypoints: webSecure
-  #     traefik.http.routers.lum.tls.certresolver: ddnsResolver
-# </LDAP>
+  authelia:
+    image: authelia/authelia
+    container_name: authelia
+    restart: unless-stopped
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ./apps/authelia/configuration.yml:/config/configuration.yml:ro
+      - ${APPDATA_VOLUME?}/authelia/:/config/
+    secrets: [JWT_SECRET, AUTHENTICATION_BACKEND_LDAP_PASSWORD, SESSION_SECRET, STORAGE_ENCRYPTION_KEY]
+    environment:
+      - AUTHELIA_JWT_SECRET_FILE=/run/secrets/JWT_SECRET
+      - AUTHELIA_AUTHENTICATION_BACKEND_LDAP_PASSWORD_FILE=/run/secrets/AUTHENTICATION_BACKEND_LDAP_PASSWORD
+      - AUTHELIA_SESSION_SECRET_FILE=/run/secrets/SESSION_SECRET
+      - AUTHELIA_STORAGE_ENCRYPTION_KEY_FILE=/run/secrets/STORAGE_ENCRYPTION_KEY
+      - AUTHELIA_DEFAULT_REDIRECTION_URL=https://${HOST?}
+      - AUTHELIA_AUTHENTICATION_BACKEND_LDAP_BASE_DN=${LDAP_HOST?}
+      - AUTHELIA_AUTHENTICATION_BACKEND_LDAP_USER=uid=${LDAP_BIND_ADMIN?},ou=people,${LDAP_HOST?}
+      - AUTHELIA_ACCESS_CONTROL_DEFAULT_POLICY=${AUTHELIA_ACCESS_CONTROL_DEFAULT_POLICY?}
+      - AUTHELIA_SESSION_DOMAIN=${HOST?}
+    labels:
+      traefik.enable: true
+      traefik.http.routers.authelia.rule: Host(`auth.${HOST?}`)
+      traefik.http.routers.authelia.entrypoints: webSecure
+      traefik.http.routers.authelia.tls.certresolver: ddnsResolver
+
+      traefik.http.middlewares.authelia.forwardauth.address: http://authelia:9091/api/verify?rd=https://auth.${HOST?}
+      traefik.http.middlewares.authelia.forwardauth.trustForwardHeader: true
+      traefik.http.middlewares.authelia.forwardauth.authResponseHeaders: Remote-User,Remote-Groups,Remote-Name,Remote-Email
+    env_file:
+      - lscr.env
+    depends_on:
+      - lldap
 
   traefik:
     # The official v2 Traefik docker image
@@ -116,8 +128,12 @@ services:
       traefik.http.services.organizr.loadbalancer.server.scheme: http
       traefik.http.routers.organizr.entrypoints: webSecure
       traefik.http.routers.organizr.tls.certresolver: ddnsResolver
+
+      traefik.http.routers.organizr.middlewares: authelia@docker
     depends_on:
       - traefik
+      - authelia
+# </BASE>
 
   nextcloud-aio-mastercontainer:
     image: nextcloud/all-in-one:latest
@@ -161,7 +177,7 @@ services:
       traefik.http.routers.nextcloud-aio-mastercontainer.entrypoints: webSecure
       traefik.http.routers.nextcloud-aio-mastercontainer.tls.certresolver: ddnsResolver
 
-      traefik.http.routers.nextcloud-aio-mastercontainer.middlewares: auth@file
+      traefik.http.routers.nextcloud-aio-mastercontainer.middlewares: authelia@docker
     depends_on:
       - traefik
 
@@ -198,15 +214,16 @@ services:
       traefik.http.routers.transmission.entrypoints: webSecure
       traefik.http.routers.transmission.tls.certresolver: ddnsResolver
 
-      traefik.http.routers.transmission.middlewares: auth@file
+      traefik.http.routers.transmission.middlewares: authelia@docker
     depends_on:
-      - organizr
+      - authelia
 
   jellyfin:
     # https://hub.docker.com/r/linuxserver/jellyfin
     image: lscr.io/linuxserver/jellyfin
-    # group_add:
-    #   - render
+    group_add: # by id as these may not exist within the container. Needed to provide permissions to the VAAPI Devices
+      - '107' #render
+      - '44' #video
     container_name: jellyfin
     restart: unless-stopped
     ports:
@@ -262,6 +279,8 @@ services:
       traefik.http.routers.vaultwarden.rule: Host(`bitwarden.${HOST?}`)
       traefik.http.routers.vaultwarden.entrypoints: webSecure
       traefik.http.routers.vaultwarden.tls.certresolver: ddnsResolver
+
+      # traefik.http.routers.vaultwarden.middlewares: authelia@docker
     depends_on:
       - traefik
 
@@ -302,9 +321,9 @@ services:
       traefik.http.routers.prowlarr.entrypoints: webSecure
       traefik.http.routers.prowlarr.tls.certresolver: ddnsResolver
 
-      traefik.http.routers.prowlarr.middlewares: auth@file
+      traefik.http.routers.prowlarr.middlewares: authelia@docker
     depends_on:
-      - organizr
+      - authelia
       - transmission
 
   # lidarr:
@@ -326,7 +345,7 @@ services:
   #     traefik.http.routers.lidarr.entrypoints: webSecure
   #     traefik.http.routers.lidarr.tls.certresolver: ddnsResolver
 
-  #     traefik.http.routers.lidarr.middlewares: auth@file
+  #     traefik.http.routers.lidarr.middlewares: authelia@docker
   #   depends_on:
   #     - prowlarr
 
@@ -349,7 +368,7 @@ services:
       traefik.http.routers.radarr.entrypoints: webSecure
       traefik.http.routers.radarr.tls.certresolver: ddnsResolver
 
-      traefik.http.routers.radarr.middlewares: auth@file
+      traefik.http.routers.radarr.middlewares: authelia@docker
     depends_on:
       - prowlarr
 
@@ -372,7 +391,7 @@ services:
       traefik.http.routers.sonarr.entrypoints: webSecure
       traefik.http.routers.sonarr.tls.certresolver: ddnsResolver
 
-      traefik.http.routers.sonarr.middlewares: auth@file
+      traefik.http.routers.sonarr.middlewares: authelia@docker
     depends_on:
       - prowlarr
 # </Servarr>
@@ -397,9 +416,9 @@ services:
       traefik.http.routers.tubesync.tls.certresolver: ddnsResolver
 
       traefik.http.middlewares.tubesync-iframe.headers.contentSecurityPolicy: frame-ancestors ${HOST?}
-      traefik.http.routers.tubesync.middlewares: auth@file, tubesync-iframe
+      traefik.http.routers.tubesync.middlewares: authelia@docker, tubesync-iframe
     depends_on:
-      - organizr
+      - authelia
 
   # syncthing:
   #   # https://hub.docker.com/r/linuxserver/syncthing
@@ -422,7 +441,7 @@ services:
   #     traefik.http.routers.syncthing.entrypoints: webSecure
   #     traefik.http.routers.syncthing.tls.certresolver: ddnsResolver
 
-  #     traefik.http.routers.syncthing.middlewares: auth@file
+  #     traefik.http.routers.syncthing.middlewares: authelia@docker
   #   restart: unless-stopped
   #   depends_on:
   #     - traefik
@@ -473,7 +492,7 @@ services:
       traefik.http.routers.gitlab.entrypoints: webSecure
       traefik.http.routers.gitlab.tls.certresolver: ddnsResolver
 
-      # traefik.http.routers.gitlab.middlewares: auth@file
+      # traefik.http.routers.gitlab.middlewares: authelia@docker
     depends_on:
       - traefik
 
@@ -524,9 +543,9 @@ services:
       traefik.http.routers.portainer.tls.certresolver: ddnsResolver
       traefik.http.routers.portainer.service: portainer
 
-      traefik.http.routers.portainer.middlewares: auth@file
+      traefik.http.routers.portainer.middlewares: authelia@docker
     depends_on:
-      - organizr
+      - authelia
 
   watchtower:
     image: containrrr/watchtower
@@ -556,9 +575,9 @@ services:
       traefik.http.routers.glances.entrypoints: webSecure
       traefik.http.routers.glances.tls.certresolver: ddnsResolver
 
-      traefik.http.routers.glances.middlewares: auth@file
+      traefik.http.routers.glances.middlewares: authelia@docker
     depends_on:
-      - organizr
+      - authelia
 
   scrutiny:
     # https://github.com/AnalogJ/scrutiny
@@ -587,10 +606,21 @@ services:
       traefik.http.routers.scrutiny.entrypoints: webSecure
       traefik.http.routers.scrutiny.tls.certresolver: ddnsResolver
 
-      traefik.http.routers.scrutiny.middlewares: auth@file
+      traefik.http.routers.scrutiny.middlewares: authelia@docker
     depends_on:
-      - organizr
+      - authelia
 # </MonitorServices>
+
+
+secrets:
+  JWT_SECRET:
+    environment: AUTHELIA_SECRET
+  AUTHENTICATION_BACKEND_LDAP_PASSWORD:
+    environment: LDAP_BIND_ADMIN_PASSWORD
+  SESSION_SECRET:
+    environment: AUTHELIA_SECRET
+  STORAGE_ENCRYPTION_KEY:
+    environment: AUTHELIA_SECRET
 
 
 volumes:
