@@ -520,7 +520,7 @@ services:
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - ./apps/samba/config.yml:/data/config.yml:ro
-      - ${APPDATA_VOLUME?}/samba/private/:/var/lib/samba/private/
+      - ${APPDATA_VOLUME?}/samba/:/data/
       - ${STORAGE_VOLUME?}/:/samba/storage/
 # </LocalServices>
 

@@ -168,11 +168,9 @@
   - enable 2FA
   - SMTP
     - authelia
+  - <https://hstspreload.org/>
 - readme roadmap
   - PBR section
-  - device specific section
-    - tubesync volume due to bad SATA HAT software (weak)
-      - or <https://github.com/meeb/tubesync/blob/main/docs/other-database-backends.md>
   - check for grammar issues
 - [podman](https://podman.io) migration
   - (faster than docker ?)
