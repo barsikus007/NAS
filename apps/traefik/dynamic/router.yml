@@ -1,0 +1,16 @@
+http:
+  routers:
+    router-web-panel:
+      rule: "Host(`router.{{ env "TRAEFIK_ENTRYPOINTS_WEBSECURE_HTTP_TLS_DOMAINS_MAIN" }}`)"
+      entrypoints:
+        - webSecure
+      service: router-web-panel
+      tls:
+        certResolver: ddnsResolver
+      middlewares: authelia@docker
+
+  services:
+    router-web-panel:
+      loadBalancer:
+        servers:
+          - url: "http://router"

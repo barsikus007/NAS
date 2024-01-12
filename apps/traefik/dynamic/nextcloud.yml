@@ -3,12 +3,11 @@ http:
     nextcloud:
       rule: "Host(`cloud.{{ env "TRAEFIK_ENTRYPOINTS_WEBSECURE_HTTP_TLS_DOMAINS_MAIN" }}`)"
       entrypoints:
-        - "webSecure"
+        - webSecure
       service: nextcloud
-      middlewares:
-        - nextcloud-chain
       tls:
-        certresolver: "ddnsResolver"
+        certresolver: ddnsResolver
+      middlewares: nextcloud-chain
 
   services:
     nextcloud:

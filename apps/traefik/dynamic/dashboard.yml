@@ -7,8 +7,4 @@ http:
       service: api@internal
       tls:
         certResolver: ddnsResolver
-      middlewares: auth
-  middlewares:
-    auth:
-      forwardAuth:
-        address: "http://organizr/api/v2/auth/1"
+      middlewares: authelia@docker
