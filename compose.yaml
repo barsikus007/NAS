@@ -42,7 +42,7 @@ services:
       - ${APPDATA_VOLUME?}/authelia/:/config/
     secrets: [JWT_SECRET, AUTHENTICATION_BACKEND_LDAP_PASSWORD, SESSION_SECRET, STORAGE_ENCRYPTION_KEY]
     environment:
-      - AUTHELIA_JWT_SECRET_FILE=/run/secrets/JWT_SECRET
+      - AUTHELIA_IDENTITY_VALIDATION_RESET_PASSWORD_JWT_SECRET_FILE=/run/secrets/JWT_SECRET
       - AUTHELIA_AUTHENTICATION_BACKEND_LDAP_PASSWORD_FILE=/run/secrets/AUTHENTICATION_BACKEND_LDAP_PASSWORD
       - AUTHELIA_SESSION_SECRET_FILE=/run/secrets/SESSION_SECRET
       - AUTHELIA_STORAGE_ENCRYPTION_KEY_FILE=/run/secrets/STORAGE_ENCRYPTION_KEY
@@ -50,6 +50,7 @@ services:
       - AUTHELIA_AUTHENTICATION_BACKEND_LDAP_BASE_DN=${LDAP_HOST?}
       - AUTHELIA_AUTHENTICATION_BACKEND_LDAP_USER=uid=${LDAP_BIND_ADMIN?},ou=people,${LDAP_HOST?}
       - AUTHELIA_ACCESS_CONTROL_DEFAULT_POLICY=${AUTHELIA_ACCESS_CONTROL_DEFAULT_POLICY?}
+      # it will break in 5.0 cause new config path is session.cookies[0].domain
       - AUTHELIA_SESSION_DOMAIN=${HOST?}
     labels:
       traefik.enable: true
@@ -251,10 +252,14 @@ services:
       # - /usr/lib/aarch64-linux-gnu/:/usr/lib/aarch64-linux-gnu/:ro
       # - /etc/alternatives/:/etc/alternatives/:ro
     devices:
-      - /dev/rga
-      - /dev/dri
-      - /dev/dma_heap
-      - /dev/mpp_service
+      # BASE
+      - /dev/dri/
+      # AMD GPU KFD
+      # - /dev/kfd/
+      # ROCKCHIP
+      # - /dev/rga/
+      # - /dev/dma_heap/
+      # - /dev/mpp_service/
     labels:
       traefik.enable: true
       traefik.http.routers.jellyfin.rule: Host(`media.${HOST?}`)

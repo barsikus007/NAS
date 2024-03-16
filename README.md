@@ -3,15 +3,19 @@
 ## Install
 
 1. Install docker (ex: `curl -fsSL https://get.docker.com | sh`)
+   1. [Install loki driver](https://grafana.com/docs/loki/latest/send-data/docker-driver/) `docker plugin install grafana/loki-docker-driver:2.9.5 --alias loki --grant-all-permissions`
+      1. [Latest version](https://github.com/grafana/loki/releases)
+      2. [Arm support](https://github.com/grafana/loki/pull/9247)
+         1. Install loki driver `docker plugin install miacis/loki-docker-driver:2.9.1 --alias loki --grant-all-permissions`
 2. Copy `example.env` to `.env` and edit (also edit `lscr.env`)
 3. Create `APPDATA_VOLUME` and `STORAGE_VOLUME` folders/mountpoints
-4. Copy `apps/` to your folder specified in `APPDATA_VOLUME` env var
-5. Open `80`, `443` (traefik entrypoints), `3478` (nextcloud-talk entrypoint) and `51413` (transmission seeding) ports in router
-6. `docker compose up -d --build && sudo chown -R --reference=${HOME} ${APPDATA_VOLUME}/*`
-   1. Use `docker compose up -d --build --wait` or `./bin/graceful_start.sh` to start
+   <!-- Copy `apps/` to your folder specified in `APPDATA_VOLUME` env var -->
+4. Open `80`, `443` (traefik entrypoints), `3478` (nextcloud-talk entrypoint) and `51413` (transmission seeding) ports in router and firewall
+5. `docker compose up -d --build && sudo chown -R --reference=${HOME} ${APPDATA_VOLUME}/*`
+   1. Use  `docker compose up -d --build --wait` or `./bin/graceful_start.sh` to start
    2. Change the ownership of the files under `APPDATA_VOLUME` (e.g. `sudo chown -R --reference=${HOME} ${APPDATA_VOLUME}/*`) immediately after volume creation
-7. Wait for containers to be in a healthy state, then stop some of them to patch `docker compose stop organizr && ./bin/appdata_patcher.sh && docker compose up -d organizr`
-8. Configure web applications manually as indicated in the section below
+6. Wait for containers to be in a healthy state, then stop some of them to patch `docker compose stop organizr && ./bin/appdata_patcher.sh && docker compose up -d organizr`
+7. Configure web applications manually as indicated in the section below
 
 ### P.S
 
@@ -31,6 +35,7 @@
   - Specify `cloud.${HOST}` in certain field
   - Change TZ
   - Specify apps to install and install
+    - I prefer to enable all except ClamAV (antivirus) and Docker Socket Proxy
   - Specify backup location `/tank/backup` and generate password
 - NextCloud `cloud.${HOST}`
   - `/settings`
@@ -92,6 +97,8 @@
 - Lidarr disabled due to unusable use case for me
   - If you need album release software, then uncomment `services.lidarr` section in `compose.yaml`
 - Transmission alt speed enabled due to broken pcie on rock-3a to reduce overload
+- Target of this build is AMD64
+  - It was ARM64 before, but I fucked enough with my rock-3a
 
 ## TODO
 

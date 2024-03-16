@@ -7,7 +7,11 @@
 			"path": "/tank/apps"
 		}
 	],
-	"settings": {},
+	"settings": {
+        "search.exclude": {
+            "/tank/apps/": true
+        }
+    },
 	"extensions": {
 		"recommendations": [
 			"ms-azuretools.vscode-docker",
@@ -15,7 +19,8 @@
 			"yzhang.markdown-all-in-one",
 			"bierner.github-markdown-preview",
 			"timonwong.shellcheck",
-			"editorconfig.editorconfig"
+			"editorconfig.editorconfig",
+			"redhat.vscode-yaml"
 		]
 	}
 }
