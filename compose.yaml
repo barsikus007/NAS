@@ -36,12 +36,9 @@ services:
     image: authelia/authelia
     container_name: authelia
     restart: unless-stopped
-    volumes:
-      - /etc/localtime:/etc/localtime:ro
-      - ./apps/authelia/configuration.yml:/config/configuration.yml:ro
-      - ${APPDATA_VOLUME?}/authelia/:/config/
     secrets: [JWT_SECRET, AUTHENTICATION_BACKEND_LDAP_PASSWORD, SESSION_SECRET, STORAGE_ENCRYPTION_KEY]
     environment:
+      - HOST=${HOST?}
       - X_AUTHELIA_CONFIG_FILTERS=template
       - AUTHELIA_IDENTITY_VALIDATION_RESET_PASSWORD_JWT_SECRET_FILE=/run/secrets/JWT_SECRET
       - AUTHELIA_AUTHENTICATION_BACKEND_LDAP_PASSWORD_FILE=/run/secrets/AUTHENTICATION_BACKEND_LDAP_PASSWORD
@@ -50,7 +47,10 @@ services:
       - AUTHELIA_AUTHENTICATION_BACKEND_LDAP_BASE_DN=${LDAP_HOST?}
       - AUTHELIA_AUTHENTICATION_BACKEND_LDAP_USER=uid=${LDAP_BIND_ADMIN?},ou=people,${LDAP_HOST?}
       - AUTHELIA_ACCESS_CONTROL_DEFAULT_POLICY=${AUTHELIA_ACCESS_CONTROL_DEFAULT_POLICY?}
-      - HOST=${HOST?}
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ./apps/authelia/configuration.yml:/config/configuration.yml:ro
+      - ${APPDATA_VOLUME?}/authelia/:/config/
     labels:
       traefik.enable: true
       traefik.http.routers.authelia.rule: Host(`auth.${HOST?}`)
@@ -299,10 +299,10 @@ services:
     #   - LOG_LEVEL=info
     #   - LOG_HTML=false
     #   - CAPTCHA_SOLVER=none
-    volumes:
-      - /etc/localtime:/etc/localtime:ro
     env_file:
       - lscr.env
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
 
   prowlarr:
     # https://hub.docker.com/r/linuxserver/prowlarr
@@ -406,12 +406,12 @@ services:
     restart: unless-stopped
     # ports:
     #   - 4848:4848
+    env_file:
+      - lscr.env
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - ${APPDATA_VOLUME?}/tubesync/:/config/
       - ${STORAGE_VOLUME?}/downloads/media/youtube/:/downloads/
-    env_file:
-      - lscr.env
     labels:
       traefik.enable: true
       traefik.http.routers.tubesync.rule: Host(`youtube.${HOST?}`)
@@ -432,11 +432,13 @@ services:
       - 22000:22000
       - 22000:22000/udp
       - 21027:21027/udp
-    volumes:
-      - ${APPDATA_VOLUME?}/syncthing/config/:/config/
-      # - ${STORAGE_VOLUME?}/sync/:/sync/
     env_file:
       - lscr.env
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ${APPDATA_VOLUME?}/syncthing/config/:/config/
+      # - ${STORAGE_VOLUME?}/sync/:/config/Sync/
+      # - ${STORAGE_VOLUME?}/sync/:/sync/
     labels:
       traefik.enable: true
       traefik.http.routers.syncthing.rule: Host(`sync.${HOST?}`)
