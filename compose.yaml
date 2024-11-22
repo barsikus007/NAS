@@ -1,5 +1,5 @@
 services:
-# <BASE>
+#region BASE
   lldap:
     image: lldap/lldap:stable
     container_name: lldap
@@ -135,7 +135,7 @@ services:
     depends_on:
       - traefik
       - authelia
-# </BASE>
+#endregion BASE
 
   nextcloud-aio-mastercontainer:
     image: nextcloud/all-in-one:latest
@@ -290,7 +290,7 @@ services:
     depends_on:
       - traefik
 
-# <Servarr>
+#region Servarr
   flaresolverr:
     # https://hub.docker.com/r/flaresolverr/flaresolverr
     image: ghcr.io/flaresolverr/flaresolverr:latest
@@ -400,7 +400,7 @@ services:
       traefik.http.routers.sonarr.middlewares: authelia@docker
     depends_on:
       - prowlarr
-# </Servarr>
+#endregion Servarr
 
   tubesync:
     # https://github.com/meeb/tubesync
@@ -503,7 +503,7 @@ services:
       - traefik
 
 
-# <LocalServices>
+#region LocalServices
   samba:
     image: crazymax/samba:latest
     container_name: samba
@@ -528,10 +528,10 @@ services:
       - ./apps/samba/config.yml:/data/config.yml:ro
       - ${APPDATA_VOLUME?}/samba/:/data/
       - ${STORAGE_VOLUME?}/:/samba/storage/
-# </LocalServices>
+# endregion LocalServices
 
 
-# <MonitorServices>
+#region MonitorServices
   portainer:
     image: portainer/portainer:1.25.0
     container_name: portainer
@@ -615,7 +615,7 @@ services:
       traefik.http.routers.scrutiny.middlewares: authelia@docker
     depends_on:
       - authelia
-# </MonitorServices>
+#endregion MonitorServices
 
 
 secrets:
