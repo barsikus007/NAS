@@ -76,11 +76,13 @@
       - auth.${HOST} -> authelia
       - rest services use authelia auth
   - 3478 nextcloud-talk
+  - 22000 syncthing
   - 51413 transmission
 - LAN => docker network
   - 8096 jellyfin webUI
   - 1900/udp jellyfin service discovery (DNLA)
   - 7359/udp jellyfin client discovery
+  - 21027/udp syncthing client discovery
 
 ## Notes
 
@@ -151,10 +153,8 @@
     - whoami
 - alternate software
   - [seafile](https://www.seafile.com/en/home/) ? (check nextcloud speed)
-  - [syncthing](https://syncthing.net) ? (check cloud usecase)
-  - [gitea](https://about.gitea.com) ? (instead of gitlab due to weak NAS)
+  - [gitea](https://about.gitea.com) ? (instead of gitlab, less bloated?)
 - new software
-  - syncthing ? (for some important folder, which supposed to be synced on every device (passwords/notes))
   - <https://github.com/immich-app/immich>
   - <https://github.com/ramanlabs-in/hachi>
     - probably, on client with webdav

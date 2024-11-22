@@ -20,7 +20,8 @@
 			"bierner.github-markdown-preview",
 			"timonwong.shellcheck",
 			"editorconfig.editorconfig",
-			"redhat.vscode-yaml"
+            // https://github.com/redhat-developer/vscode-yaml/issues/955
+			// "redhat.vscode-yaml",
 		]
 	}
 }

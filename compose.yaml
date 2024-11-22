@@ -426,34 +426,34 @@ services:
     depends_on:
       - authelia
 
-  # syncthing:
-  #   # https://hub.docker.com/r/linuxserver/syncthing
-  #   image: lscr.io/linuxserver/syncthing:latest
-  #   container_name: syncthing
-  #   env_file:
-  #     - lscr.env
-  #   volumes:
-  #     - ${APPDATA_VOLUME?}/syncthing/config:/config
-  #     - ${APPDATA_VOLUME?}/syncthing/data1:/data1
-  #     - ${APPDATA_VOLUME?}/syncthing/data2:/data2
-  #   # ports:
-  #   #   - 8384:8384
-  #   #   - 22000:22000/tcp
-  #   #   - 22000:22000/udp
-  #   #   - 21027:21027/udp
-  #   labels:
-  #     traefik.enable: true
-  #     traefik.http.routers.syncthing.rule: Host(`sync.${HOST?}`)
-  #     traefik.http.routers.syncthing.entrypoints: webSecure
-  #     traefik.http.routers.syncthing.tls.certresolver: ddnsResolver
+  syncthing:
+    # https://hub.docker.com/r/linuxserver/syncthing
+    image: lscr.io/linuxserver/syncthing:latest
+    container_name: syncthing
+    ports:
+      # - 8384:8384
+      - 22000:22000
+      - 22000:22000/udp
+      - 21027:21027/udp
+    volumes:
+      - ${APPDATA_VOLUME?}/syncthing/config/:/config/
+      # - ${STORAGE_VOLUME?}/sync/:/sync/
+    env_file:
+      - lscr.env
+    labels:
+      traefik.enable: true
+      traefik.http.routers.syncthing.rule: Host(`sync.${HOST?}`)
+      traefik.http.routers.syncthing.entrypoints: webSecure
+      traefik.http.routers.syncthing.tls.certresolver: ddnsResolver
 
-  #     traefik.http.routers.syncthing.middlewares: authelia@docker
-  #   restart: unless-stopped
-  #   depends_on:
-  #     - traefik
+      traefik.http.routers.syncthing.middlewares: authelia@docker
+    restart: unless-stopped
+    depends_on:
+      - authelia
 
   gitlab:
-    image: yrzr/gitlab-ce-arm64v8:latest
+    image: gitlab/gitlab-ce:latest
+    # image: yrzr/gitlab-ce-arm64v8:latest
     container_name: gitlab
     restart: unless-stopped
     environment:
