@@ -3,10 +3,6 @@
 ## Install
 
 1. Install docker (ex: `curl -fsSL https://get.docker.com | sh`)
-   1. [Install loki driver](https://grafana.com/docs/loki/latest/send-data/docker-driver/) `docker plugin install grafana/loki-docker-driver:2.9.5 --alias loki --grant-all-permissions`
-      1. [Latest version](https://github.com/grafana/loki/releases)
-      2. [Arm support](https://github.com/grafana/loki/pull/9247)
-         1. Install loki driver `docker plugin install miacis/loki-docker-driver:2.9.1 --alias loki --grant-all-permissions`
 2. Copy `example.env` to `.env` and edit (also edit `lscr.env`)
 3. Create `APPDATA_VOLUME` and `STORAGE_VOLUME` folders/mountpoints
    <!-- Copy `apps/` to your folder specified in `APPDATA_VOLUME` env var -->
