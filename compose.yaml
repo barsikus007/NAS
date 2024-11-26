@@ -511,21 +511,26 @@ services:
       - authelia
 
   syncthing:
-    # https://hub.docker.com/r/linuxserver/syncthing
-    image: lscr.io/linuxserver/syncthing:latest
+    image: syncthing/syncthing:latest
     container_name: syncthing
     ports:
-      # - 8384:8384
-      - 22000:22000
-      - 22000:22000/udp
-      - 21027:21027/udp
+      # - 8384:8384 # Web UI
+      - 22000:22000/tcp # TCP file transfers
+      - 22000:22000/udp # QUIC file transfers
+      - 21027:21027/udp # Receive local discovery broadcasts
+    healthcheck:
+      test: curl -fkLsS -m 2 127.0.0.1:8384/rest/noauth/health | grep -o --color=never OK || exit 1
+      interval: 1m
+      timeout: 10s
+      retries: 3
+    # environment:
+    #   - PCAP=cap_chown,cap_fowner+ep
     env_file:
       - lscr.env
     volumes:
       - /etc/localtime:/etc/localtime:ro
-      - ${APPDATA_VOLUME?}/syncthing/:/config/
-      # - ${STORAGE_VOLUME?}/sync/:/config/Sync/
-      # - ${STORAGE_VOLUME?}/sync/:/sync/
+      - ${APPDATA_VOLUME?}/syncthing/:/var/syncthing/config/
+      - ${STORAGE_VOLUME?}/sync/:/var/syncthing/Sync/
     labels:
       logging: promtail
       traefik.enable: true
@@ -618,7 +623,7 @@ services:
       - ${STORAGE_VOLUME?}/:/samba/storage/
     labels:
       logging: promtail
-# endregion LocalServices
+#endregion LocalServices
 
 
 #region MonitorServices
@@ -725,5 +730,3 @@ secrets:
 volumes:
   nextcloud_aio_mastercontainer:
     name: nextcloud_aio_mastercontainer # This line is not allowed to be changed as otherwise the built-in backup solution will not work
-  openldap_data:
-    driver: local
