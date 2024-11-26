@@ -1,5 +1,5 @@
 log:
-  level: DEBUG
+  level: INFO
 api:
   dashboard: true
   # Enables the web UI and tells Traefik to listen to docker

@@ -140,7 +140,7 @@ services:
       - lldap
 
   traefik:
-    # The official v2 Traefik docker image
+    # The official v3 Traefik docker image
     image: traefik:latest
     container_name: traefik
     restart: unless-stopped
