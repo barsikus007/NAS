@@ -27,11 +27,18 @@ entryPoints:
     address: :443
     http:
       tls:
+        domains:
+          - main: '{{ env "HOST" }}'
+            sans:
+              - '*.{{ env "HOST" }}'
         certResolver: ddnsResolver
+      middlewares:
+        - iframe-headers@file
 certificatesResolvers:
   # Enable a dns challenge named "ddnsResolver"
   ddnsResolver:
     acme:
+      email: '{{ env "HOST_EMAIL" }}'
       dnsChallenge:
         # Tell which provider to use
         provider: duckdns

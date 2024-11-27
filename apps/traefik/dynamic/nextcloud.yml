@@ -1,7 +1,7 @@
 http:
   routers:
     nextcloud:
-      rule: "Host(`cloud.{{ env "TRAEFIK_ENTRYPOINTS_WEBSECURE_HTTP_TLS_DOMAINS_MAIN" }}`)"
+      rule: 'Host(`cloud.{{ env "HOST" }}`)'
       entrypoints:
         - webSecure
       service: nextcloud
@@ -21,7 +21,7 @@ http:
         hostsProxyHeaders:
           - "X-Forwarded-Host"
         referrerPolicy: "same-origin"
-        contentSecurityPolicy: "frame-ancestors {{ env "TRAEFIK_ENTRYPOINTS_WEBSECURE_HTTP_TLS_DOMAINS_MAIN" }}"
+        contentSecurityPolicy: 'frame-ancestors {{ env "HOST" }}'
 
     https-redirect:
       redirectscheme:

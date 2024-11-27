@@ -67,7 +67,7 @@ services:
       traefik.http.routers.grafana.entrypoints: webSecure
       traefik.http.routers.grafana.tls.certresolver: ddnsResolver
 
-      traefik.http.routers.grafana.middlewares: authelia@docker
+      traefik.http.routers.grafana.middlewares: authelia@file
     depends_on:
       - loki
       - traefik
@@ -105,7 +105,7 @@ services:
       traefik.http.routers.lldap.entrypoints: webSecure
       traefik.http.routers.lldap.tls.certresolver: ddnsResolver
 
-      traefik.http.routers.lldap.middlewares: authelia@docker
+      traefik.http.routers.lldap.middlewares: authelia@file
 
   authelia:
     image: authelia/authelia
@@ -132,10 +132,6 @@ services:
       traefik.http.routers.authelia.rule: Host(`auth.${HOST?}`)
       traefik.http.routers.authelia.entrypoints: webSecure
       traefik.http.routers.authelia.tls.certresolver: ddnsResolver
-
-      traefik.http.middlewares.authelia.forwardauth.address: http://authelia:9091/api/verify?rd=https://auth.${HOST?}
-      traefik.http.middlewares.authelia.forwardauth.trustForwardHeader: true
-      traefik.http.middlewares.authelia.forwardauth.authResponseHeaders: Remote-User,Remote-Groups,Remote-Name,Remote-Email
     depends_on:
       - lldap
 
@@ -155,10 +151,8 @@ services:
       # The Web UI (enabled by --api.insecure=true)
       # - 8080:8080
     environment:
-      - TRAEFIK_ENTRYPOINTS_WEBSECURE_HTTP_TLS_DOMAINS_MAIN=${HOST?}
-      - TRAEFIK_ENTRYPOINTS_WEBSECURE_HTTP_TLS_DOMAINS_SANS=*.${HOST?}
-      # passes the specified email to "ddnsResolver"
-      - TRAEFIK_CERTIFICATESRESOLVERS_DDNSRESOLVER_ACME_EMAIL=${HOST_EMAIL?}
+      - HOST=${HOST?}
+      - HOST_EMAIL=${HOST_EMAIL?}
       - DUCKDNS_TOKEN=${DUCKDNS_TOKEN?}
     volumes:
       - /etc/localtime:/etc/localtime:ro
@@ -208,7 +202,7 @@ services:
       traefik.http.routers.organizr.entrypoints: webSecure
       traefik.http.routers.organizr.tls.certresolver: ddnsResolver
 
-      traefik.http.routers.organizr.middlewares: authelia@docker
+      traefik.http.routers.organizr.middlewares: authelia@file
     depends_on:
       - traefik
       - authelia
@@ -257,7 +251,7 @@ services:
       traefik.http.routers.nextcloud-aio-mastercontainer.entrypoints: webSecure
       traefik.http.routers.nextcloud-aio-mastercontainer.tls.certresolver: ddnsResolver
 
-      traefik.http.routers.nextcloud-aio-mastercontainer.middlewares: authelia@docker
+      traefik.http.routers.nextcloud-aio-mastercontainer.middlewares: authelia@file
     depends_on:
       - traefik
 
@@ -295,7 +289,7 @@ services:
       traefik.http.routers.transmission.entrypoints: webSecure
       traefik.http.routers.transmission.tls.certresolver: ddnsResolver
 
-      traefik.http.routers.transmission.middlewares: authelia@docker
+      traefik.http.routers.transmission.middlewares: authelia@file
     depends_on:
       - authelia
 
@@ -362,7 +356,7 @@ services:
       traefik.http.routers.vaultwarden.entrypoints: webSecure
       traefik.http.routers.vaultwarden.tls.certresolver: ddnsResolver
 
-      # traefik.http.routers.vaultwarden.middlewares: authelia@docker
+      # traefik.http.routers.vaultwarden.middlewares: authelia@file
     depends_on:
       - traefik
 
@@ -404,7 +398,7 @@ services:
       traefik.http.routers.prowlarr.entrypoints: webSecure
       traefik.http.routers.prowlarr.tls.certresolver: ddnsResolver
 
-      traefik.http.routers.prowlarr.middlewares: authelia@docker
+      traefik.http.routers.prowlarr.middlewares: authelia@file
     depends_on:
       - authelia
       - transmission
@@ -429,7 +423,7 @@ services:
   #     traefik.http.routers.lidarr.entrypoints: webSecure
   #     traefik.http.routers.lidarr.tls.certresolver: ddnsResolver
 
-  #     traefik.http.routers.lidarr.middlewares: authelia@docker
+  #     traefik.http.routers.lidarr.middlewares: authelia@file
   #   depends_on:
   #     - prowlarr
 
@@ -453,7 +447,7 @@ services:
       traefik.http.routers.radarr.entrypoints: webSecure
       traefik.http.routers.radarr.tls.certresolver: ddnsResolver
 
-      traefik.http.routers.radarr.middlewares: authelia@docker
+      traefik.http.routers.radarr.middlewares: authelia@file
     depends_on:
       - prowlarr
 
@@ -477,7 +471,7 @@ services:
       traefik.http.routers.sonarr.entrypoints: webSecure
       traefik.http.routers.sonarr.tls.certresolver: ddnsResolver
 
-      traefik.http.routers.sonarr.middlewares: authelia@docker
+      traefik.http.routers.sonarr.middlewares: authelia@file
     depends_on:
       - prowlarr
 #endregion Servarr
@@ -500,8 +494,7 @@ services:
       traefik.http.routers.tubesync.entrypoints: webSecure
       traefik.http.routers.tubesync.tls.certresolver: ddnsResolver
 
-      traefik.http.middlewares.tubesync-iframe.headers.contentSecurityPolicy: frame-ancestors ${HOST?}
-      traefik.http.routers.tubesync.middlewares: authelia@docker, tubesync-iframe
+      traefik.http.routers.tubesync.middlewares: authelia@file
     depends_on:
       - authelia
 
@@ -533,7 +526,7 @@ services:
       traefik.http.routers.syncthing.entrypoints: webSecure
       traefik.http.routers.syncthing.tls.certresolver: ddnsResolver
 
-      traefik.http.routers.syncthing.middlewares: authelia@docker
+      traefik.http.routers.syncthing.middlewares: authelia@file
     restart: unless-stopped
     depends_on:
       - authelia
@@ -586,7 +579,7 @@ services:
       traefik.http.routers.gitlab.entrypoints: webSecure
       traefik.http.routers.gitlab.tls.certresolver: ddnsResolver
 
-      # traefik.http.routers.gitlab.middlewares: authelia@docker
+      # traefik.http.routers.gitlab.middlewares: authelia@file
     depends_on:
       - traefik
 
@@ -640,7 +633,7 @@ services:
       traefik.http.routers.portainer.tls.certresolver: ddnsResolver
       traefik.http.routers.portainer.service: portainer
 
-      traefik.http.routers.portainer.middlewares: authelia@docker
+      traefik.http.routers.portainer.middlewares: authelia@file
     depends_on:
       - authelia
 
@@ -673,7 +666,7 @@ services:
       traefik.http.routers.glances.entrypoints: webSecure
       traefik.http.routers.glances.tls.certresolver: ddnsResolver
 
-      traefik.http.routers.glances.middlewares: authelia@docker
+      traefik.http.routers.glances.middlewares: authelia@file
     depends_on:
       - authelia
 
@@ -705,7 +698,7 @@ services:
       traefik.http.routers.scrutiny.entrypoints: webSecure
       traefik.http.routers.scrutiny.tls.certresolver: ddnsResolver
 
-      traefik.http.routers.scrutiny.middlewares: authelia@docker
+      traefik.http.routers.scrutiny.middlewares: authelia@file
     depends_on:
       - authelia
 #endregion MonitorServices

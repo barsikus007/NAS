@@ -1,10 +1,10 @@
 http:
   routers:
     api:
-      rule: "Host(`traefik.{{ env "TRAEFIK_ENTRYPOINTS_WEBSECURE_HTTP_TLS_DOMAINS_MAIN" }}`)"
+      rule: 'Host(`traefik.{{ env "HOST" }}`)'
       entrypoints:
         - webSecure
       service: api@internal
       tls:
         certResolver: ddnsResolver
-      middlewares: authelia@docker
+      middlewares: authelia
