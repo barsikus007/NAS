@@ -10,8 +10,8 @@ theme: auto
 # server:
 #   address: 'tcp://:9091'
 
-log:
-  level: debug
+# log:
+#   level: debug
 
 # totp:
 #   issuer: authelia.com

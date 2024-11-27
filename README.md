@@ -100,19 +100,6 @@
 
 ## TODO
 
-- hardware (rock-3a)
-  - [rockpi-penta soft](https://github.com/barsikus007/rockpi-penta)
-  - button
-    - <https://github.com/barsikus007/rockpi-penta/blob/ac1a4a20e224f1166b28bf155eb1cf322610d2f8/usr/bin/rockpi-penta/misc.py#L183>
-  - top PWM fan 5V 40x10mm 3-pin RYB and cut upper ring
-  - heatsink or microfan on cpu
-    - height ~15mm
-      - 19x19mm cpu
-      - 15x10mm ram
-    - <https://shop.allnetchina.cn/products/heat-sink-for-rock-3a>
-    - <https://www.ozon.ru/search/?text=raspberry+pi+радиатор&from_global=true>
-  - RTC battery
-    - <https://shop.allnetchina.cn/products/rtc-battery-for-rock-pi-4>
 - software
   - is stopping organizr needed for patching?
   - why chown?
@@ -126,7 +113,7 @@
   - patchers
     - `apps/` patcher with `.env` values
     - `{$APPDATA_VOLUME}/` patcher with `.env` values
-  - bluid ssp on arm64 or check if organizr have ssp?
+  - organizr SSO ?
   - healthchecks ?
     - flaresolverr
     - glances
@@ -153,11 +140,9 @@
   - VPN (wireguard)
     - inner
     - outer
-  - change lcdr UID GID
-  - change passwds and ssh-rsa after complete setup and use docker secrets
+  - change lscr.env UID GID
+  - change passwds and ssh-key after complete setup and use docker secrets
   - secure whole server with vpn or firewall
-  - log level debug disable
-  - enable 2FA
   - SMTP
     - authelia
   - <https://hstspreload.org/>
