@@ -5,6 +5,9 @@ http:
         address: 'http://authelia:9091/api/verify?rd=https://auth.{{ env "HOST" }}'
         trustForwardHeader: true
         authResponseHeaders: Remote-User,Remote-Groups,Remote-Name,Remote-Email
-    iframe-headers:
+    secure-headers:
       headers:
+        hostsProxyHeaders:
+          - "X-Forwarded-Host"
+        referrerPolicy: "same-origin"
         contentSecurityPolicy: 'frame-ancestors {{ env "HOST" }}'

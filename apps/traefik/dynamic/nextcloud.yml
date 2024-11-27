@@ -16,13 +16,6 @@ http:
           - url: "http://host.docker.internal:11000" # Use the host's IP address if Traefik runs outside the host network
 
   middlewares:
-    nextcloud-secure-headers:
-      headers:
-        hostsProxyHeaders:
-          - "X-Forwarded-Host"
-        referrerPolicy: "same-origin"
-        contentSecurityPolicy: 'frame-ancestors {{ env "HOST" }}'
-
     https-redirect:
       redirectscheme:
         scheme: https
@@ -32,4 +25,4 @@ http:
         middlewares:
           # - ... (e.g. rate limiting middleware)
           - https-redirect
-          - nextcloud-secure-headers
+          - secure-headers

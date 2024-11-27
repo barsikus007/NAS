@@ -33,7 +33,7 @@ entryPoints:
               - '*.{{ env "HOST" }}'
         certResolver: ddnsResolver
       middlewares:
-        - iframe-headers@file
+        - secure-headers@file
 certificatesResolvers:
   # Enable a dns challenge named "ddnsResolver"
   ddnsResolver:
