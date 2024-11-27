@@ -325,11 +325,6 @@ services:
       - ${STORAGE_VOLUME?}/downloads/media/tvshows/:/data/tvshows/
       - ${STORAGE_VOLUME?}/downloads/media/movies/:/data/movies/
       - ${STORAGE_VOLUME?}/downloads/media/music/:/data/music/
-
-      # - /usr/bin/ffmpeg:/usr/lib/jellyfin-ffmpeg/ffmpeg:ro
-      # - /usr/bin/ffprobe:/usr/lib/jellyfin-ffmpeg/ffprobe:ro
-      # - /usr/lib/aarch64-linux-gnu/:/usr/lib/aarch64-linux-gnu/:ro
-      # - /etc/alternatives/:/etc/alternatives/:ro
     devices:
       # BASE
       - /dev/dri/
