@@ -9,6 +9,36 @@ clients:
   - url: http://loki:3100/loki/api/v1/push
 
 scrape_configs:
+- job_name: system
+  static_configs:
+  - targets:
+    - localhost
+    labels:
+      job: varlogs
+      __path__: /var/log/*log
+- job_name: journal
+  journal:
+    max_age: 12h
+    labels:
+      job: systemd-journal
+    path: /var/log/journal
+  relabel_configs:
+    - source_labels: ['__journal__hostname']
+      target_label: host
+    - source_labels: ['__journal__systemd_unit']
+      target_label: systemd_unit
+      regex: '(.+)'
+    - source_labels: ['__journal__systemd_user_unit']
+      target_label: systemd_user_unit
+      regex: '(.+)'
+    - source_labels: ['__journal__transport']
+      target_label: transport
+      regex: '(.+)'
+    - source_labels: ['__journal_priority_keyword']
+      target_label: level
+      regex: '(.+)'
+    - source_labels: ['__journal_syslog_identifier']
+      target_label: syslog_identifier
 - job_name: docker_socket
   docker_sd_configs:
     - host: unix:///var/run/docker.sock
@@ -16,6 +46,9 @@ scrape_configs:
       filters:
         - name: label
           values: ['logging=promtail']
+  pipeline_stages:
+  - static_labels:
+      job: containerlogs
   relabel_configs:
     - source_labels: ['__meta_docker_container_name']
       regex: '/(.*)'
