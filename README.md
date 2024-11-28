@@ -146,7 +146,7 @@
   - secure whole server with vpn or firewall
   - SMTP
     - authelia
-  - <https://hstspreload.org/>
+  - [traefik stsSeconds](https://hstspreload.org/)
 - readme roadmap
   - PBR section
   - check for grammar issues

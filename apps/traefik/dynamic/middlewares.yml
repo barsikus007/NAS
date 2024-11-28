@@ -7,9 +7,9 @@ http:
         authResponseHeaders: Remote-User,Remote-Groups,Remote-Name,Remote-Email
     secure-headers:
       headers:
-        # hostsProxyHeaders:
-        #   - "X-Forwarded-Host"
-        # contentTypeNosniff: true
-        # browserXssFilter: true
+        # stsSeconds: 31536000
+        # stsIncludeSubdomains: true
+        contentTypeNosniff: true
+        browserXssFilter: true
         contentSecurityPolicy: 'frame-ancestors {{ env "HOST" }}'
         referrerPolicy: "same-origin"
