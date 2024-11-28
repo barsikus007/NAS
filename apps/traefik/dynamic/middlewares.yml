@@ -13,3 +13,5 @@ http:
         browserXssFilter: true
         contentSecurityPolicy: 'frame-ancestors {{ env "HOST" }}'
         referrerPolicy: "same-origin"
+    gzip:
+      compress: {}
