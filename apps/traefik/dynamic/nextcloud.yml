@@ -6,23 +6,10 @@ http:
         - webSecure
       service: nextcloud
       tls:
-        certresolver: ddnsResolver
-      middlewares: nextcloud-chain
+        certResolver: ddnsResolver
 
   services:
     nextcloud:
       loadBalancer:
         servers:
           - url: "http://host.docker.internal:11000" # Use the host's IP address if Traefik runs outside the host network
-
-  middlewares:
-    https-redirect:
-      redirectscheme:
-        scheme: https
-
-    nextcloud-chain:
-      chain:
-        middlewares:
-          # - ... (e.g. rate limiting middleware)
-          - https-redirect
-          - secure-headers

@@ -136,6 +136,7 @@
   - fail2ban
     - [traefik](https://plugins.traefik.io/plugins/628c9ebcffc0cd18356a979f/fail2-ban)
     - [organizr](https://docs.organizr.app/features/fail2ban-integration)
+      - [authelia is used now](https://www.authelia.com/overview/security/measures/#more-protections-measures-with-fail2ban)
     - [nextcloud](https://docs.nextcloud.com/server/stable/admin_manual/installation/harden_server.html#setup-fail2ban)
   - VPN (wireguard)
     - inner
