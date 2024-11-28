@@ -97,6 +97,11 @@
 - Transmission alt speed enabled due to broken pcie on rock-3a to reduce overload
 - Target of this build is AMD64
   - It was ARM64 before, but I fucked enough with my rock-3a
+- CrowdSec cheatsheet
+  - `docker compose exec crowdsec cscli metrics`
+  - `docker compose exec crowdsec cscli alerts list`
+  - `docker compose exec crowdsec cscli decisions list`
+    - `docker compose exec crowdsec cscli decisions delete -i x.x.x.x`
 
 ## TODO
 
@@ -133,25 +138,23 @@
   - <https://github.com/fallenbagel/jellyseerr>
   - <https://www.photoprism.app>
 - software late
-  - fail2ban
-    - [traefik](https://plugins.traefik.io/plugins/628c9ebcffc0cd18356a979f/fail2-ban)
-    - [organizr](https://docs.organizr.app/features/fail2ban-integration)
-      - [authelia is used now](https://www.authelia.com/overview/security/measures/#more-protections-measures-with-fail2ban)
-    - [nextcloud](https://docs.nextcloud.com/server/stable/admin_manual/installation/harden_server.html#setup-fail2ban)
   - VPN (wireguard)
     - inner
     - outer
-  - change lscr.env UID GID
-  - change passwds and ssh-key after complete setup and use docker secrets
-  - secure whole server with vpn or firewall
+  - security
+    - change lscr.env UID GID
+    - change passwds
+    - change ssh-key after complete setup
+    - use docker secrets
+    - secure whole server with vpn and/or firewall
+    - [traefik stsSeconds](https://hstspreload.org/)
   - SMTP
     - authelia
-  - [traefik stsSeconds](https://hstspreload.org/)
 - readme roadmap
   - PBR section
   - check for grammar issues
 - [podman](https://podman.io) migration
-  - (faster than docker ?)
+  - (better than docker ?)
   - why ?
   - <https://github.com/nextcloud/all-in-one/discussions/3487>
 

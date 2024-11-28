@@ -1,5 +1,6 @@
 log:
   level: INFO
+accessLog: {}
 api:
   dashboard: true
   # Enables the web UI and tells Traefik to listen to docker
@@ -33,13 +34,13 @@ entryPoints:
               - '*.{{ env "HOST" }}'
         certResolver: ddnsResolver
       middlewares:
+        - crowdsec@file
         - secure-headers@file
         - gzip@file
 certificatesResolvers:
   # Enable a dns challenge named "ddnsResolver"
   ddnsResolver:
     acme:
-      email: '{{ env "HOST_EMAIL" }}'
       dnsChallenge:
         # Tell which provider to use
         provider: duckdns
@@ -52,3 +53,8 @@ certificatesResolvers:
 # allow nextcloud-aio-mastercontainer to work
 serversTransport:
   insecureSkipVerify: true
+experimental:
+  plugins:
+    crowdsec-bouncer:
+      moduleName: github.com/maxlerebourg/crowdsec-bouncer-traefik-plugin
+      version: v1.3.5 # To update

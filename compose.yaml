@@ -107,7 +107,7 @@ services:
       traefik.http.routers.lldap.middlewares: authelia@file
 
   authelia:
-    image: authelia/authelia
+    image: authelia/authelia:latest
     container_name: authelia
     restart: unless-stopped
     secrets: [JWT_SECRET, AUTHENTICATION_BACKEND_LDAP_PASSWORD, SESSION_SECRET, STORAGE_ENCRYPTION_KEY]
@@ -151,8 +151,9 @@ services:
       # - 8080:8080
     environment:
       - HOST=${HOST?}
-      - HOST_EMAIL=${HOST_EMAIL?}
+      - TRAEFIK_CERTIFICATESRESOLVERS_DDNSRESOLVER_ACME_EMAIL=${HOST_EMAIL?}
       - DUCKDNS_TOKEN=${DUCKDNS_TOKEN?}
+      - BOUNCER_KEY_TRAEFIK=${BOUNCER_KEY_TRAEFIK?}
     volumes:
       - /etc/localtime:/etc/localtime:ro
       # Create a letsencrypt dir within the folder where the docker-compose file is
@@ -205,6 +206,28 @@ services:
     depends_on:
       - traefik
       - authelia
+
+  crowdsec:
+    image: crowdsecurity/crowdsec:latest
+    container_name: crowdsec
+    restart: always
+    secrets: [bouncer_key_traefik]
+    environment:
+      #this is the list of collections we want to install
+      - COLLECTIONS=crowdsecurity/sshd crowdsecurity/http-dos crowdsecurity/traefik LePresidente/authelia LePresidente/jellyfin Dominic-Wagner/vaultwarden
+      # will enable crowdsecurity/smb crowdsecurity/nextcloud
+      # ? https://app.crowdsec.net/hub/author/crowdsecurity/collections/smb
+      # ? https://app.crowdsec.net/hub/author/LePresidente/collections/jellyfin
+      # ? https://app.crowdsec.net/hub/author/crowdsecurity/collections/nextcloud
+      # possible timokoessler/gitlab gauth-fr/immich
+    env_file:
+      - lscr.env
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ./apps/crowdsec/acquis.yaml:/etc/crowdsec/acquis.yaml:ro
+      - ${APPDATA_VOLUME?}/crowdsec/:/var/lib/crowdsec/data/
+    labels:
+      logging: promtail
 #endregion BASE
 
   nextcloud-aio-mastercontainer:
@@ -313,6 +336,7 @@ services:
       - lscr.env
     volumes:
       - /etc/localtime:/etc/localtime:ro
+      - ./apps/jellyfin/logging.json:/config/config/logging.json:ro
       - ${APPDATA_VOLUME?}/jellyfin/:/config/
       - ${STORAGE_VOLUME?}/downloads/media/youtube/:/data/youtube/
       - ${STORAGE_VOLUME?}/downloads/media/tvshows/:/data/tvshows/
@@ -713,6 +737,8 @@ secrets:
     environment: AUTHELIA_SECRET
   STORAGE_ENCRYPTION_KEY:
     environment: AUTHELIA_SECRET
+  bouncer_key_traefik:
+    environment: BOUNCER_KEY_TRAEFIK
 
 
 volumes:

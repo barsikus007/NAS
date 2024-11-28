@@ -1,0 +1,36 @@
+source: loki
+# log_level: info
+url: http://loki:3100/
+# limit: 1000  # Defaults to 100 in stream mode and 5000 in one-shot mode
+query: |
+  {service_name="traefik"}
+labels:
+  type: traefik
+---
+source: loki
+url: http://loki:3100/
+query: |
+  {service_name="authelia"}
+labels:
+  type: authelia
+---
+source: loki
+url: http://loki:3100/
+query: |
+  {service_name="jellyfin"}
+labels:
+  type: jellyfin
+---
+source: loki
+url: http://loki:3100/
+query: |
+  {service_name="vaultwarden"}
+labels:
+  type: vaultwarden
+---
+source: loki
+url: http://loki:3100/
+query: |
+  {filename="/var/log/auth.log"}
+labels:
+  type: syslog

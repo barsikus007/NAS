@@ -15,3 +15,8 @@ http:
         referrerPolicy: "same-origin"
     gzip:
       compress: {}
+    crowdsec:
+      plugin:
+        crowdsec-bouncer:
+          enabled: true
+          crowdseclapikey: '{{ env "BOUNCER_KEY_TRAEFIK" }}'
