@@ -215,11 +215,9 @@ services:
     environment:
       #this is the list of collections we want to install
       - COLLECTIONS=crowdsecurity/sshd crowdsecurity/http-dos crowdsecurity/traefik LePresidente/authelia LePresidente/jellyfin Dominic-Wagner/vaultwarden
-      # will enable crowdsecurity/smb crowdsecurity/nextcloud
       # ? https://app.crowdsec.net/hub/author/crowdsecurity/collections/smb
-      # ? https://app.crowdsec.net/hub/author/LePresidente/collections/jellyfin
       # ? https://app.crowdsec.net/hub/author/crowdsecurity/collections/nextcloud
-      # possible timokoessler/gitlab gauth-fr/immich
+      # ? timokoessler/gitlab gauth-fr/immich
     env_file:
       - lscr.env
     volumes:
@@ -279,7 +277,7 @@ services:
 
   transmission:
     # https://hub.docker.com/r/linuxserver/transmission
-    image: lscr.io/linuxserver/transmission
+    image: lscr.io/linuxserver/transmission:latest
     container_name: transmission
     restart: unless-stopped
     ports:
@@ -317,7 +315,7 @@ services:
 
   jellyfin:
     # https://hub.docker.com/r/linuxserver/jellyfin
-    image: lscr.io/linuxserver/jellyfin
+    image: lscr.io/linuxserver/jellyfin:latest
     group_add: # by id as these may not exist within the container. Needed to provide permissions to the VAAPI Devices
       - '107' #render
       - '44' #video
@@ -336,6 +334,7 @@ services:
       - lscr.env
     volumes:
       - /etc/localtime:/etc/localtime:ro
+      # https://app.crowdsec.net/hub/author/LePresidente/collections/jellyfin
       - ./apps/jellyfin/logging.json:/config/config/logging.json:ro
       - ${APPDATA_VOLUME?}/jellyfin/:/config/
       - ${STORAGE_VOLUME?}/downloads/media/youtube/:/data/youtube/
@@ -662,7 +661,7 @@ services:
       - authelia
 
   watchtower:
-    image: containrrr/watchtower
+    image: containrrr/watchtower:latest
     container_name: watchtower
     restart: unless-stopped
     command: --cleanup --remove-volumes
@@ -671,7 +670,7 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
 
   glances:
-    image: nicolargo/glances
+    image: nicolargo/glances:latest
     container_name: glances
     restart: unless-stopped
     pid: host
