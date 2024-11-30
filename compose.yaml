@@ -218,6 +218,7 @@ services:
       # ? https://app.crowdsec.net/hub/author/crowdsecurity/collections/smb
       # ? https://app.crowdsec.net/hub/author/crowdsecurity/collections/nextcloud
       # ? timokoessler/gitlab gauth-fr/immich
+      - DISABLE_SCENARIOS=crowdsecurity/http-crawl-non_statics
     env_file:
       - lscr.env
     volumes:
@@ -228,6 +229,7 @@ services:
       logging: promtail
 #endregion BASE
 
+#region CLOUD
   nextcloud-aio-mastercontainer:
     image: nextcloud/all-in-one:latest
     container_name: nextcloud-aio-mastercontainer # This line is not allowed to be changed as otherwise AIO will not work correctly
@@ -381,6 +383,7 @@ services:
       # traefik.http.routers.vaultwarden.middlewares: authelia@file
     depends_on:
       - traefik
+#endregion CLOUD
 
 #region Servarr
   flaresolverr:
@@ -498,6 +501,7 @@ services:
       - prowlarr
 #endregion Servarr
 
+#region CLOUD
   tubesync:
     # https://github.com/meeb/tubesync
     image: ghcr.io/meeb/tubesync:latest
@@ -605,7 +609,7 @@ services:
       # traefik.http.routers.gitlab.middlewares: authelia@file
     depends_on:
       - traefik
-
+#endregion CLOUD
 
 #region LocalServices
   samba:
