@@ -79,7 +79,6 @@ services:
       traefik.http.routers.grafana.middlewares: authelia@file
     depends_on:
       - loki
-      - traefik
 #endregion LOGS
 
 #region BASE
@@ -110,7 +109,7 @@ services:
       logging: promtail
       traefik.enable: true
       traefik.http.routers.lldap.rule: Host(`lldap.${HOST?}`)
-      traefik.http.services.lldap.loadbalancer.server.port: 17170
+      traefik.http.services.lldap-nas.loadbalancer.server.port: 17170
       traefik.http.routers.lldap.entrypoints: webSecure
       traefik.http.routers.lldap.tls.certresolver: ddnsResolver
 
@@ -188,8 +187,6 @@ services:
       traefik.http.routers.whoami.entrypoints: webSecure
       # Uses the Host rule to define which certificate to issue
       traefik.http.routers.whoami.tls.certresolver: ddnsResolver
-    depends_on:
-      - traefik
 
   organizr:
     image: organizr/organizr:latest
@@ -208,13 +205,12 @@ services:
       logging: promtail
       traefik.enable: true
       traefik.http.routers.organizr.rule: Host(`${HOST?}`) || Host(`www.${HOST?}`)
-      traefik.http.services.organizr.loadbalancer.server.scheme: http
+      traefik.http.services.organizr-nas.loadbalancer.server.scheme: http
       traefik.http.routers.organizr.entrypoints: webSecure
       traefik.http.routers.organizr.tls.certresolver: ddnsResolver
 
       traefik.http.routers.organizr.middlewares: authelia@file
     depends_on:
-      - traefik
       - authelia
 
   crowdsec:
@@ -278,14 +274,12 @@ services:
       logging: promtail
       traefik.enable: true
       traefik.http.routers.nextcloud-aio-mastercontainer.rule: Host(`aio.cloud.${HOST?}`)
-      traefik.http.services.nextcloud-aio-mastercontainer.loadbalancer.server.port: 8080
-      traefik.http.services.nextcloud-aio-mastercontainer.loadbalancer.server.scheme: https
+      traefik.http.services.nextcloud-aio-mastercontainer-nas.loadbalancer.server.port: 8080
+      traefik.http.services.nextcloud-aio-mastercontainer-nas.loadbalancer.server.scheme: https
       traefik.http.routers.nextcloud-aio-mastercontainer.entrypoints: webSecure
       traefik.http.routers.nextcloud-aio-mastercontainer.tls.certresolver: ddnsResolver
 
       traefik.http.routers.nextcloud-aio-mastercontainer.middlewares: authelia@file
-    depends_on:
-      - traefik
 
   transmission:
     # https://hub.docker.com/r/linuxserver/transmission
@@ -322,8 +316,6 @@ services:
       traefik.http.routers.transmission.tls.certresolver: ddnsResolver
 
       traefik.http.routers.transmission.middlewares: authelia@file
-    depends_on:
-      - authelia
 
   jellyfin:
     # https://hub.docker.com/r/linuxserver/jellyfin
@@ -359,11 +351,9 @@ services:
       logging: promtail
       traefik.enable: true
       traefik.http.routers.jellyfin.rule: Host(`media.${HOST?}`)
-      traefik.http.services.jellyfin.loadbalancer.server.port: 8096
+      traefik.http.services.jellyfin-nas.loadbalancer.server.port: 8096
       traefik.http.routers.jellyfin.entrypoints: webSecure
       traefik.http.routers.jellyfin.tls.certresolver: ddnsResolver
-    depends_on:
-      - traefik
 
   vaultwarden:
     image: vaultwarden/server:latest
@@ -384,8 +374,6 @@ services:
       traefik.http.routers.vaultwarden.tls.certresolver: ddnsResolver
 
       # traefik.http.routers.vaultwarden.middlewares: authelia@file
-    depends_on:
-      - traefik
 #endregion CLOUD
 
 #region Servarr
@@ -428,7 +416,6 @@ services:
 
       traefik.http.routers.prowlarr.middlewares: authelia@file
     depends_on:
-      - authelia
       - transmission
 
   # lidarr:
@@ -524,8 +511,6 @@ services:
       traefik.http.routers.tubesync.tls.certresolver: ddnsResolver
 
       traefik.http.routers.tubesync.middlewares: authelia@file
-    depends_on:
-      - authelia
 
   syncthing:
     image: syncthing/syncthing:latest
@@ -558,8 +543,6 @@ services:
 
       traefik.http.routers.syncthing.middlewares: authelia@file
     restart: unless-stopped
-    depends_on:
-      - authelia
 
   gitlab:
     image: gitlab/gitlab-ce:latest
@@ -605,13 +588,11 @@ services:
       logging: promtail
       traefik.enable: true
       traefik.http.routers.gitlab.rule: Host(`gitlab.${HOST?}`)
-      traefik.http.services.gitlab.loadbalancer.server.port: 80
+      traefik.http.services.gitlab-nas.loadbalancer.server.port: 80
       traefik.http.routers.gitlab.entrypoints: webSecure
       traefik.http.routers.gitlab.tls.certresolver: ddnsResolver
 
       # traefik.http.routers.gitlab.middlewares: authelia@file
-    depends_on:
-      - traefik
 #endregion CLOUD
 
 #region GUI
@@ -647,8 +628,6 @@ services:
   #     traefik.http.middlewares.gui-disable-security.headers.contentSecurityPolicy: frame-ancestors browser.${HOST?}
   #     # traefik.http.middlewares.gui-disable-security.headers.customResponseHeaders.Content-Security-Policy: ''
   #     traefik.http.routers.browser.middlewares: authelia@file, gui-disable-security
-  #   depends_on:
-  #     - authelia
 #endregion GUI
 
 #region LocalServices
@@ -680,7 +659,6 @@ services:
       logging: promtail
 #endregion LocalServices
 
-
 #region MonitorServices
   portainer:
     image: portainer/portainer:1.25.0
@@ -695,14 +673,12 @@ services:
       logging: promtail
       traefik.enable: true
       traefik.http.routers.portainer.rule: Host(`docker.${HOST?}`)
-      traefik.http.services.portainer.loadbalancer.server.port: 9000
+      traefik.http.services.portainer-nas.loadbalancer.server.port: 9000
       traefik.http.routers.portainer.entrypoints: webSecure
       traefik.http.routers.portainer.tls.certresolver: ddnsResolver
       traefik.http.routers.portainer.service: portainer
 
       traefik.http.routers.portainer.middlewares: authelia@file
-    depends_on:
-      - authelia
 
   watchtower:
     image: containrrr/watchtower:latest
@@ -734,8 +710,6 @@ services:
       traefik.http.routers.glances.tls.certresolver: ddnsResolver
 
       traefik.http.routers.glances.middlewares: authelia@file
-    depends_on:
-      - authelia
 
   scrutiny:
     # https://github.com/AnalogJ/scrutiny
@@ -766,8 +740,6 @@ services:
       traefik.http.routers.scrutiny.tls.certresolver: ddnsResolver
 
       traefik.http.routers.scrutiny.middlewares: authelia@file
-    depends_on:
-      - authelia
 #endregion MonitorServices
 
 
