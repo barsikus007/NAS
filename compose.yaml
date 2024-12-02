@@ -1,3 +1,13 @@
+x-gpu-devices: &gpu-devices
+  # BASE
+  - /dev/dri/
+  # AMD GPU KFD
+  - /dev/kfd
+  # ROCKCHIP
+  # - /dev/rga/
+  # - /dev/dma_heap/
+  # - /dev/mpp_service/
+
 services:
 #region LOGS
   loki:
@@ -344,14 +354,7 @@ services:
       - ${STORAGE_VOLUME?}/downloads/media/movies/:/data/movies/
       - ${STORAGE_VOLUME?}/downloads/media/music/:/data/music/
     devices:
-      # BASE
-      - /dev/dri/
-      # AMD GPU KFD
-      # - /dev/kfd/
-      # ROCKCHIP
-      # - /dev/rga/
-      # - /dev/dma_heap/
-      # - /dev/mpp_service/
+      *gpu-devices
     labels:
       logging: promtail
       traefik.enable: true
@@ -610,6 +613,43 @@ services:
     depends_on:
       - traefik
 #endregion CLOUD
+
+#region GUI
+  # browser:
+  #   # https://hub.docker.com/r/linuxserver/chromium
+  #   image: lscr.io/linuxserver/chromium:latest
+  #   # https://hub.docker.com/r/linuxserver/firefox
+  #   # image: lscr.io/linuxserver/firefox:latest
+  #   container_name: browser
+  #   # security_opt:
+  #   #   - seccomp:unconfined #optional
+  #   # ports:
+  #   #   - 3000:3000
+  #   # environment:
+  #   #   - TITLE=kek
+  #   #   - DRINODE=/dev/dri/card0
+  #   #   - CHROME_CLI=https://www.linuxserver.io/ #optional
+  #   #   - FIREFOX_CLI=https://www.linuxserver.io/ #optional
+  #   # env_file:
+  #   #   - lscr.env
+  #   volumes:
+  #     - /etc/localtime:/etc/localtime:ro
+  #   devices:
+  #     *gpu-devices
+  #   shm_size: '1gb'
+  #   labels:
+  #     logging: promtail
+  #     traefik.enable: true
+  #     traefik.http.routers.browser.rule: Host(`browser.${HOST?}`)
+  #     traefik.http.routers.browser.entrypoints: webSecure
+  #     traefik.http.routers.browser.tls.certresolver: ddnsResolver
+
+  #     traefik.http.middlewares.gui-disable-security.headers.contentSecurityPolicy: frame-ancestors browser.${HOST?}
+  #     # traefik.http.middlewares.gui-disable-security.headers.customResponseHeaders.Content-Security-Policy: ''
+  #     traefik.http.routers.browser.middlewares: authelia@file, gui-disable-security
+  #   depends_on:
+  #     - authelia
+#endregion GUI
 
 #region LocalServices
   samba:
