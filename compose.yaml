@@ -74,7 +74,6 @@ services:
       traefik.enable: true
       traefik.http.routers.grafana.rule: Host(`logs.${HOST?}`)
       traefik.http.routers.grafana.entrypoints: webSecure
-      traefik.http.routers.grafana.tls.certresolver: ddnsResolver
 
       traefik.http.routers.grafana.middlewares: authelia@file
     depends_on:
@@ -111,7 +110,6 @@ services:
       traefik.http.routers.lldap.rule: Host(`lldap.${HOST?}`)
       traefik.http.services.lldap-nas.loadbalancer.server.port: 17170
       traefik.http.routers.lldap.entrypoints: webSecure
-      traefik.http.routers.lldap.tls.certresolver: ddnsResolver
 
       traefik.http.routers.lldap.middlewares: authelia@file
 
@@ -139,7 +137,6 @@ services:
       traefik.enable: true
       traefik.http.routers.authelia.rule: Host(`auth.${HOST?}`)
       traefik.http.routers.authelia.entrypoints: webSecure
-      traefik.http.routers.authelia.tls.certresolver: ddnsResolver
     depends_on:
       - lldap
 
@@ -158,6 +155,8 @@ services:
       - 443:443
       # The Web UI (enabled by --api.insecure=true)
       # - 8080:8080
+    healthcheck:
+      test: traefik healthcheck --ping
     command:
       - --ping=true
       - --log.level=INFO
@@ -168,7 +167,7 @@ services:
       # TODO: Uncomment to debug SSL.
       # - --api.insecure=true
       - --providers.docker.exposedByDefault=false
-      - --providers.file.directory=/etc/traefik/dynamic
+      - --providers.file.directory=/etc/traefik/
       # TODO: Comment to debug dynamic configs.
       - --providers.file.watch=false
       - --entryPoints.web.address=:80
@@ -201,7 +200,7 @@ services:
       - ${APPDATA_VOLUME?}/letsencrypt/:/letsencrypt/
       # So that Traefik can listen to the Docker events
       - /var/run/docker.sock:/var/run/docker.sock:ro
-      # Traefik static and dynamic configs
+      # Traefik dynamic configs
       - ./apps/traefik/:/etc/traefik/:ro
     labels:
       logging: promtail
@@ -217,8 +216,6 @@ services:
       traefik.enable: true
       traefik.http.routers.whoami.rule: Host(`whoami.${HOST?}`)
       traefik.http.routers.whoami.entrypoints: webSecure
-      # Uses the Host rule to define which certificate to issue
-      traefik.http.routers.whoami.tls.certresolver: ddnsResolver
 
   organizr:
     image: organizr/organizr:latest
@@ -239,7 +236,6 @@ services:
       traefik.http.routers.organizr.rule: Host(`${HOST?}`) || Host(`www.${HOST?}`)
       traefik.http.services.organizr-nas.loadbalancer.server.scheme: http
       traefik.http.routers.organizr.entrypoints: webSecure
-      traefik.http.routers.organizr.tls.certresolver: ddnsResolver
 
       traefik.http.routers.organizr.middlewares: authelia@file
     depends_on:
@@ -265,6 +261,8 @@ services:
       - ${APPDATA_VOLUME?}/crowdsec/:/var/lib/crowdsec/data/
     labels:
       logging: promtail
+    depends_on:
+      - loki
 #endregion BASE
 
 #region CLOUD
@@ -309,7 +307,6 @@ services:
       traefik.http.services.nextcloud-aio-mastercontainer-nas.loadbalancer.server.port: 8080
       traefik.http.services.nextcloud-aio-mastercontainer-nas.loadbalancer.server.scheme: https
       traefik.http.routers.nextcloud-aio-mastercontainer.entrypoints: webSecure
-      traefik.http.routers.nextcloud-aio-mastercontainer.tls.certresolver: ddnsResolver
 
       traefik.http.routers.nextcloud-aio-mastercontainer.middlewares: authelia@file
 
@@ -345,7 +342,6 @@ services:
       traefik.enable: true
       traefik.http.routers.transmission.rule: Host(`torrent.${HOST?}`)
       traefik.http.routers.transmission.entrypoints: webSecure
-      traefik.http.routers.transmission.tls.certresolver: ddnsResolver
 
       traefik.http.routers.transmission.middlewares: authelia@file
 
@@ -385,7 +381,6 @@ services:
       traefik.http.routers.jellyfin.rule: Host(`media.${HOST?}`)
       traefik.http.services.jellyfin-nas.loadbalancer.server.port: 8096
       traefik.http.routers.jellyfin.entrypoints: webSecure
-      traefik.http.routers.jellyfin.tls.certresolver: ddnsResolver
 
   vaultwarden:
     image: vaultwarden/server:latest
@@ -403,7 +398,6 @@ services:
       traefik.enable: true
       traefik.http.routers.vaultwarden.rule: Host(`bitwarden.${HOST?}`)
       traefik.http.routers.vaultwarden.entrypoints: webSecure
-      traefik.http.routers.vaultwarden.tls.certresolver: ddnsResolver
 
       # traefik.http.routers.vaultwarden.middlewares: authelia@file
 #endregion CLOUD
@@ -444,7 +438,6 @@ services:
       traefik.enable: true
       traefik.http.routers.prowlarr.rule: Host(`prowlarr.${HOST?}`)
       traefik.http.routers.prowlarr.entrypoints: webSecure
-      traefik.http.routers.prowlarr.tls.certresolver: ddnsResolver
 
       traefik.http.routers.prowlarr.middlewares: authelia@file
     depends_on:
@@ -468,7 +461,6 @@ services:
   #     traefik.enable: true
   #     traefik.http.routers.lidarr.rule: Host(`lidarr.${HOST?}`)
   #     traefik.http.routers.lidarr.entrypoints: webSecure
-  #     traefik.http.routers.lidarr.tls.certresolver: ddnsResolver
 
   #     traefik.http.routers.lidarr.middlewares: authelia@file
   #   depends_on:
@@ -492,7 +484,6 @@ services:
       traefik.enable: true
       traefik.http.routers.radarr.rule: Host(`radarr.${HOST?}`)
       traefik.http.routers.radarr.entrypoints: webSecure
-      traefik.http.routers.radarr.tls.certresolver: ddnsResolver
 
       traefik.http.routers.radarr.middlewares: authelia@file
     depends_on:
@@ -516,7 +507,6 @@ services:
       traefik.enable: true
       traefik.http.routers.sonarr.rule: Host(`sonarr.${HOST?}`)
       traefik.http.routers.sonarr.entrypoints: webSecure
-      traefik.http.routers.sonarr.tls.certresolver: ddnsResolver
 
       traefik.http.routers.sonarr.middlewares: authelia@file
     depends_on:
@@ -540,7 +530,6 @@ services:
       traefik.enable: true
       traefik.http.routers.tubesync.rule: Host(`youtube.${HOST?}`)
       traefik.http.routers.tubesync.entrypoints: webSecure
-      traefik.http.routers.tubesync.tls.certresolver: ddnsResolver
 
       traefik.http.routers.tubesync.middlewares: authelia@file
 
@@ -571,7 +560,6 @@ services:
       traefik.enable: true
       traefik.http.routers.syncthing.rule: Host(`sync.${HOST?}`)
       traefik.http.routers.syncthing.entrypoints: webSecure
-      traefik.http.routers.syncthing.tls.certresolver: ddnsResolver
 
       traefik.http.routers.syncthing.middlewares: authelia@file
     restart: unless-stopped
@@ -622,7 +610,6 @@ services:
       traefik.http.routers.gitlab.rule: Host(`gitlab.${HOST?}`)
       traefik.http.services.gitlab-nas.loadbalancer.server.port: 80
       traefik.http.routers.gitlab.entrypoints: webSecure
-      traefik.http.routers.gitlab.tls.certresolver: ddnsResolver
 
       # traefik.http.routers.gitlab.middlewares: authelia@file
 #endregion CLOUD
@@ -655,7 +642,6 @@ services:
   #     traefik.enable: true
   #     traefik.http.routers.browser.rule: Host(`browser.${HOST?}`)
   #     traefik.http.routers.browser.entrypoints: webSecure
-  #     traefik.http.routers.browser.tls.certresolver: ddnsResolver
 
   #     traefik.http.middlewares.gui-disable-security.headers.contentSecurityPolicy: frame-ancestors browser.${HOST?}
   #     # traefik.http.middlewares.gui-disable-security.headers.customResponseHeaders.Content-Security-Policy: ''
@@ -707,8 +693,7 @@ services:
       traefik.http.routers.portainer.rule: Host(`docker.${HOST?}`)
       traefik.http.services.portainer-nas.loadbalancer.server.port: 9000
       traefik.http.routers.portainer.entrypoints: webSecure
-      traefik.http.routers.portainer.tls.certresolver: ddnsResolver
-      traefik.http.routers.portainer.service: portainer
+      traefik.http.routers.portainer.service: portainer-nas
 
       traefik.http.routers.portainer.middlewares: authelia@file
 
@@ -739,7 +724,6 @@ services:
       traefik.enable: true
       traefik.http.routers.glances.rule: Host(`control.${HOST?}`)
       traefik.http.routers.glances.entrypoints: webSecure
-      traefik.http.routers.glances.tls.certresolver: ddnsResolver
 
       traefik.http.routers.glances.middlewares: authelia@file
 
@@ -769,7 +753,6 @@ services:
       traefik.enable: true
       traefik.http.routers.scrutiny.rule: Host(`smart.control.${HOST?}`)
       traefik.http.routers.scrutiny.entrypoints: webSecure
-      traefik.http.routers.scrutiny.tls.certresolver: ddnsResolver
 
       traefik.http.routers.scrutiny.middlewares: authelia@file
 #endregion MonitorServices

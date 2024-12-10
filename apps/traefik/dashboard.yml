@@ -2,7 +2,7 @@ http:
   routers:
     api:
       rule: 'Host(`traefik.{{ env "HOST" }}`)'
-      entrypoints:
+      entryPoints:
         - webSecure
       service: api@internal
       tls:

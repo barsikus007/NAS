@@ -2,11 +2,9 @@ http:
   routers:
     router-web-panel:
       rule: 'Host(`router.{{ env "HOST" }}`)'
-      entrypoints:
+      entryPoints:
         - webSecure
       service: router-web-panel
-      tls:
-        certResolver: ddnsResolver
       middlewares: authelia
 
   services:

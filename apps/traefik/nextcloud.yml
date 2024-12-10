@@ -2,11 +2,9 @@ http:
   routers:
     nextcloud:
       rule: 'Host(`cloud.{{ env "HOST" }}`)'
-      entrypoints:
+      entryPoints:
         - webSecure
       service: nextcloud
-      tls:
-        certResolver: ddnsResolver
 
   services:
     nextcloud:
