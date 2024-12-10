@@ -158,11 +158,43 @@ services:
       - 443:443
       # The Web UI (enabled by --api.insecure=true)
       # - 8080:8080
+    command:
+      - --ping=true
+      - --log.level=INFO
+      # - --log.level=DEBUG
+      # TODO json
+      - --accessLog
+      - --api.dashboard=true
+      # TODO: Uncomment to debug SSL.
+      # - --api.insecure=true
+      - --providers.docker.exposedByDefault=false
+      - --providers.file.directory=/etc/traefik/dynamic
+      # TODO: Comment to debug dynamic configs.
+      - --providers.file.watch=false
+      - --entryPoints.web.address=:80
+      - --entryPoints.web.http.redirections.entryPoint.to=webSecure
+      - --entryPoints.web.http.redirections.entryPoint.scheme=https
+      - --entryPoints.web.http.redirections.entryPoint.permanent=true
+      - --entryPoints.webSecure.address=:443
+      - --entryPoints.webSecure.http.tls.domains[0].main=${HOST?}
+      - --entryPoints.webSecure.http.tls.domains[0].sans=*.${HOST?}
+      - --entryPoints.webSecure.http.tls.certResolver=ddnsResolver
+      - --entryPoints.webSecure.http.middlewares=crowdsec@file,secure-headers@file,gzip@file
+      - --certificatesResolvers.ddnsResolver.acme.email=${HOST_EMAIL?}
+      - --certificatesResolvers.ddnsResolver.acme.dnsChallenge.provider=${PROVIDER_NAME?}
+      # TODO: Long propagation fix https://www.reddit.com/r/Traefik/comments/149dplx/traefik_duckdns_dns_challenge_problem/
+      # - --certificatesResolvers.ddnsResolver.acme.dnsChallenge.disablePropagationCheck=true
+      # TODO: Uncomment to debug ssl
+      # - --certificatesResolvers.ddnsResolver.acme.caServer=https://acme-staging-v02.api.letsencrypt.org/directory
+      - --certificatesResolvers.ddnsResolver.acme.storage=/letsencrypt/acme.json
+      # Allow nextcloud-aio-mastercontainer to work.
+      - --serversTransport.insecureSkipVerify=true
+      - --experimental.plugins.crowdsec-bouncer.moduleName=github.com/maxlerebourg/crowdsec-bouncer-traefik-plugin
+      - --experimental.plugins.crowdsec-bouncer.version=v1.3.5  # To update
     environment:
       - HOST=${HOST?}
-      - TRAEFIK_CERTIFICATESRESOLVERS_DDNSRESOLVER_ACME_EMAIL=${HOST_EMAIL?}
-      - DUCKDNS_TOKEN=${DUCKDNS_TOKEN?}
       - BOUNCER_KEY_TRAEFIK=${BOUNCER_KEY_TRAEFIK?}
+      - ${PROVIDER_ENV?}=${PROVIDER_TOKEN?}
     volumes:
       - /etc/localtime:/etc/localtime:ro
       # Create a letsencrypt dir within the folder where the docker-compose file is

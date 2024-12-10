@@ -15,7 +15,6 @@
 
 ### P.S
 
-- duckdns is hardcoded, to use other provider, change `.env`, `compose.yaml` and `traefik/traefik.yml`
 - devices: compose sections
   - adapt `jellyfin` compose config to your hardware decoders
   - add your disks to `scrutiny` compose config
