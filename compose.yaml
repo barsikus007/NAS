@@ -99,6 +99,7 @@ services:
       - LLDAP_LDAP_USER_DN=${LDAP_BIND_ADMIN?}
       - LLDAP_LDAP_USER_EMAIL=${HOST_EMAIL?}
       - LLDAP_LDAP_USER_PASS=${LDAP_BIND_ADMIN_PASSWORD?}
+      - LLDAP_JWT_SECRET=${LDAP_SECRET?}
     env_file:
       - lscr.env
     volumes:
