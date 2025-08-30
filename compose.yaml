@@ -142,7 +142,7 @@ services:
 
   traefik:
     # The official v3 Traefik docker image
-    image: traefik:latest
+    image: traefik:v3.5
     container_name: traefik
     restart: unless-stopped
     extra_hosts:
@@ -164,7 +164,7 @@ services:
       # TODO json
       - --accessLog
       - --api.dashboard=true
-      # TODO: Uncomment to debug SSL.
+      # TODO: Uncomment to debug SSL and enable dashboard.
       # - --api.insecure=true
       - --providers.docker.exposedByDefault=false
       - --providers.file.directory=/etc/traefik/
@@ -183,7 +183,7 @@ services:
       - --certificatesResolvers.ddnsResolver.acme.dnsChallenge.provider=${PROVIDER_NAME?}
       # TODO: Long propagation fix https://www.reddit.com/r/Traefik/comments/149dplx/traefik_duckdns_dns_challenge_problem/
       # - --certificatesResolvers.ddnsResolver.acme.dnsChallenge.disablePropagationCheck=true
-      # TODO: Uncomment to debug ssl
+      # TODO: Uncomment to debug SSL.
       # - --certificatesResolvers.ddnsResolver.acme.caServer=https://acme-staging-v02.api.letsencrypt.org/directory
       - --certificatesResolvers.ddnsResolver.acme.storage=/letsencrypt/acme.json
       # Allow nextcloud-aio-mastercontainer to work.
@@ -193,7 +193,8 @@ services:
     environment:
       - HOST=${HOST?}
       - BOUNCER_KEY_TRAEFIK=${BOUNCER_KEY_TRAEFIK?}
-      - ${PROVIDER_ENV?}=${PROVIDER_TOKEN?}
+    env_file:
+      - .provider.env
     volumes:
       - /etc/localtime:/etc/localtime:ro
       # Create a letsencrypt dir within the folder where the docker-compose file is
