@@ -8,6 +8,12 @@ x-gpu-devices: &gpu-devices
   # - /dev/dma_heap/
   # - /dev/mpp_service/
 
+x-disk-devices: &disk-devices
+  - /dev/sda
+  - /dev/sdb
+  - /dev/sdc
+  # - /dev/sdd
+
 services:
 #region LOGS
   loki:
@@ -746,10 +752,7 @@ services:
       - ${APPDATA_VOLUME?}/scrutiny/config/:/opt/scrutiny/config/
       - ${APPDATA_VOLUME?}/scrutiny/influxdb/:/opt/scrutiny/influxdb/
     devices:
-      - /dev/sda
-      - /dev/sdb
-      - /dev/sdc
-      - /dev/sdd
+      *disk-devices
     labels:
       logging: promtail
       traefik.enable: true

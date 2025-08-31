@@ -4,14 +4,15 @@
 
 1. Install docker (ex: `curl -fsSL https://get.docker.com | sh`)
 2. Copy `*.env.example` files to `*.env` and edit
-3. Create `APPDATA_VOLUME` and `STORAGE_VOLUME` folders/mountpoints
+3. Edit `compose.yaml` templates at the beginning
+4. Create `APPDATA_VOLUME` and `STORAGE_VOLUME` folders/mountpoints
    <!-- Copy `apps/` to your folder specified in `APPDATA_VOLUME` env var -->
-4. Open `80`, `443` (traefik entrypoints), `3478` (nextcloud-talk entrypoint) and `51413` (transmission seeding) ports in router and firewall
-5. `docker compose up -d --build && sudo chown -R --reference=${HOME} ${APPDATA_VOLUME}/*`
+5. Open `80`, `443` (traefik entrypoints), `3478` (nextcloud-talk entrypoint) and `51413` (transmission seeding) ports in router and firewall
+6. `docker compose up -d --build && sudo chown -R --reference=${HOME} ${APPDATA_VOLUME}/*`
    1. Use  `docker compose up -d --build --wait` or `./bin/graceful_start.sh` to start
    2. Change the ownership of the files under `APPDATA_VOLUME` (e.g. `source .env && sudo chown -R --reference=${HOME} ${APPDATA_VOLUME}/*`) immediately after volume creation
-6. Wait for containers to be in a healthy state, then stop some of them to patch `docker compose stop organizr && ./bin/appdata_patcher.sh && docker compose up -d organizr`
-7. Configure web applications manually as indicated in the section below
+7. Wait for containers to be in a healthy state, then stop some of them to patch `docker compose stop organizr && ./bin/appdata_patcher.sh && docker compose up -d organizr`
+8. Configure web applications manually as indicated in the section below
 
 ### P.S
 
