@@ -47,6 +47,7 @@ services:
   grafana:
     image: grafana/grafana-oss:latest
     container_name: grafana
+    user: ${USER_ID?}
     restart: always
     healthcheck:
       test: curl http://localhost:3000/api/health || exit 1
@@ -54,8 +55,10 @@ services:
       - GF_PATHS_PROVISIONING=/etc/grafana/provisioning
       - GF_AUTH_ANONYMOUS_ENABLED=true
       - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
+      - GF_SERVER_ROOT_URL=https://logs.${HOST?}
     volumes:
       - /etc/localtime:/etc/localtime:ro
+      - ${APPDATA_VOLUME?}/grafana/:/var/lib/grafana/
     entrypoint:
       - sh
       - -euc
