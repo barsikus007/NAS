@@ -124,7 +124,7 @@ services:
       traefik.http.routers.lldap.middlewares: authelia@file
 
   authelia:
-    image: authelia/authelia:latest
+    image: authelia/authelia:4.38
     container_name: authelia
     restart: unless-stopped
     secrets: [JWT_SECRET, AUTHENTICATION_BACKEND_LDAP_PASSWORD, SESSION_SECRET, STORAGE_ENCRYPTION_KEY]
@@ -263,7 +263,7 @@ services:
       # ? https://app.crowdsec.net/hub/author/crowdsecurity/collections/smb
       # ? https://app.crowdsec.net/hub/author/crowdsecurity/collections/nextcloud
       # ? timokoessler/gitlab gauth-fr/immich
-      - DISABLE_SCENARIOS=crowdsecurity/http-crawl-non_statics
+      - DISABLE_SCENARIOS=crowdsecurity/http-crawl-non_statics crowdsecurity/http-probing
     env_file:
       - lscr.env
     volumes:
@@ -547,6 +547,7 @@ services:
   syncthing:
     image: syncthing/syncthing:latest
     container_name: syncthing
+    restart: unless-stopped
     hostname: sync.${HOST?}
     ports:
       # - 8384:8384 # Web UI
@@ -573,7 +574,6 @@ services:
       traefik.http.routers.syncthing.entrypoints: webSecure
 
       traefik.http.routers.syncthing.middlewares: authelia@file
-    restart: unless-stopped
 
   gitlab:
     image: gitlab/gitlab-ce:latest
