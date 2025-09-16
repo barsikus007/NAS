@@ -61,7 +61,7 @@
 ## Attack surface
 
 - WAN => fail2ban => docker network
-  - 80, 443 traefik
+  - 80,443/tcp traefik
     - 80 is redirected to 443
     - 443 refer to docker-hosted services
       - gitlab.${HOST} (TODO)
@@ -71,9 +71,10 @@
       - cloud.${HOST} -> nextcloud (TODO)
       - auth.${HOST} -> authelia
       - rest services use authelia auth
-  - 3478 nextcloud-talk
-  - 22000 syncthing
-  - 51413 transmission
+  - 3478/all nextcloud-talk
+  - 21114-21119/tcp,21116/udp rustdesk
+  - 22000/all syncthing
+  - 51413/all transmission
 - LAN => docker network
   - 8096 jellyfin webUI
   - 1900/udp jellyfin service discovery (DNLA)

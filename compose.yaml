@@ -765,6 +765,38 @@ services:
       traefik.http.routers.scrutiny.middlewares: authelia@file
 #endregion MonitorServices
 
+#region Other
+  rustdesk-hbbr:
+    container_name: rustdesk-hbbr
+    image: rustdesk/rustdesk-server:latest
+    restart: unless-stopped
+    command: hbbr
+    ports:
+      - 21117:21117  # used for the Relay services.
+      - 21119:21119  # used to support web clients.
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ${APPDATA_VOLUME?}/rustdesk/:/root/
+
+  rustdesk-hbbs:
+    container_name: rustdesk-hbbs
+    image: rustdesk/rustdesk-server:latest
+    restart: unless-stopped
+    command: hbbs
+    ports:
+      - 21114:21114  # used for web console, only available in Pro version.
+      - 21115:21115  # used for the NAT type test.
+      - 21116:21116  # used for TCP hole punching and connection service.
+      - 21116:21116/udp  # used for the ID registration and heartbeat service.
+      - 21118:21118  # used to support web clients.
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ${APPDATA_VOLUME?}/rustdesk/:/root/
+
+    depends_on:
+      - rustdesk-hbbr
+#endregion Other
+
 
 secrets:
   JWT_SECRET:
