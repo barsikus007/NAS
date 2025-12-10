@@ -14,14 +14,13 @@
     },
 	"extensions": {
 		"recommendations": [
-			"ms-azuretools.vscode-docker",
+			"ms-azuretools.vscode-containers",
 			"davidanson.vscode-markdownlint",
 			"yzhang.markdown-all-in-one",
 			"bierner.github-markdown-preview",
 			"timonwong.shellcheck",
 			"editorconfig.editorconfig",
-            // https://github.com/redhat-developer/vscode-yaml/issues/955
-			// "redhat.vscode-yaml",
+			"docker.docker",
 		]
 	}
 }

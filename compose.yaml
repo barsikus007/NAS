@@ -17,7 +17,8 @@ x-disk-devices: &disk-devices
 services:
 #region LOGS
   loki:
-    image: grafana/loki:latest
+    #! https://github.com/grafana/loki/issues/19966
+    image: grafana/loki:3.5.7
     container_name: loki
     restart: always
     healthcheck:
@@ -152,7 +153,8 @@ services:
 
   traefik:
     # The official v3 Traefik docker image
-    image: traefik:v3.5
+    #! https://github.com/traefik/traefik/issues/12055
+    image: traefik:v3.5.1
     container_name: traefik
     restart: unless-stopped
     extra_hosts:
@@ -641,8 +643,8 @@ services:
   #   #   - DRINODE=/dev/dri/card0
   #   #   - CHROME_CLI=https://www.linuxserver.io/ #optional
   #   #   - FIREFOX_CLI=https://www.linuxserver.io/ #optional
-  #   # env_file:
-  #   #   - lscr.env
+  #   env_file:
+  #     - lscr.env
   #   volumes:
   #     - /etc/localtime:/etc/localtime:ro
   #   devices:
@@ -704,7 +706,6 @@ services:
       traefik.http.routers.portainer.rule: Host(`docker.${HOST?}`)
       traefik.http.services.portainer-nas.loadbalancer.server.port: 9000
       traefik.http.routers.portainer.entrypoints: webSecure
-      traefik.http.routers.portainer.service: portainer-nas
 
       traefik.http.routers.portainer.middlewares: authelia@file
 

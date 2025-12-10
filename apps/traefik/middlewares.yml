@@ -1,7 +1,7 @@
 http:
   middlewares:
     authelia:
-      forwardauth:
+      forwardAuth:
         address: 'http://authelia:9091/api/verify?rd=https://auth.{{ env "HOST" }}'
         trustForwardHeader: true
         authResponseHeaders: Remote-User,Remote-Groups,Remote-Name,Remote-Email

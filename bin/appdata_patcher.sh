@@ -8,6 +8,7 @@ set +o allexport
 
 TRAEFIK_IP=$(docker inspect -f '{{.NetworkSettings.Networks.nas_default.IPAddress}}' traefik)
 echo Traefik IP: "$TRAEFIK_IP"
+# TODO use subnet
 
 FILE=$APPDATA_VOLUME/organizr/www/organizr/data/config/config.php
 echo Patching "$FILE"
