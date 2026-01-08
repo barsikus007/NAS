@@ -316,7 +316,7 @@ services:
     labels:
       logging: promtail
       traefik.enable: true
-      traefik.http.routers.nextcloud-aio-mastercontainer.rule: Host(`aio.cloud.${HOST?}`)
+      traefik.http.routers.nextcloud-aio-mastercontainer.rule: Host(`aio-cloud.${HOST?}`)
       traefik.http.services.nextcloud-aio-mastercontainer-nas.loadbalancer.server.port: 8080
       traefik.http.services.nextcloud-aio-mastercontainer-nas.loadbalancer.server.scheme: https
       traefik.http.routers.nextcloud-aio-mastercontainer.entrypoints: webSecure
@@ -578,10 +578,13 @@ services:
       traefik.http.routers.syncthing.middlewares: authelia@file
 
   gitlab:
+    #? https://hub.docker.com/r/gitlab/gitlab-ce/tags?name=18.7
     image: gitlab/gitlab-ce:latest
     # image: yrzr/gitlab-ce-arm64v8:latest
     container_name: gitlab
     restart: unless-stopped
+    ports:
+      - 22222:22
     environment:
       GITLAB_OMNIBUS_CONFIG: |
         external_url 'https://gitlab.${HOST?}'
@@ -760,7 +763,7 @@ services:
     labels:
       logging: promtail
       traefik.enable: true
-      traefik.http.routers.scrutiny.rule: Host(`smart.control.${HOST?}`)
+      traefik.http.routers.scrutiny.rule: Host(`smart-control.${HOST?}`)
       traefik.http.routers.scrutiny.entrypoints: webSecure
 
       traefik.http.routers.scrutiny.middlewares: authelia@file

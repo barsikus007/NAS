@@ -27,7 +27,7 @@
   - Setup Organizr to pass auth on lldap endpoint if needed (TODO)
   - Create users
   - TODO
-- NextCloud AIO `aio.cloud.${HOST}`
+- NextCloud AIO `aio-cloud.${HOST}`
   - Specify `cloud.${HOST}` in certain field
   - Change TZ
   - Specify apps to install and install
@@ -131,7 +131,7 @@
     - whoami
 - alternate software
   - [seafile](https://www.seafile.com/en/home/) ? (check nextcloud speed)
-  - [gitea](https://about.gitea.com) ? (instead of gitlab, less bloated?)
+  - [Forgejo](https://forgejo.org/docs/latest/admin/installation/docker/) ? (instead of gitlab, less bloated?)
 - new software
   - <https://github.com/immich-app/immich>
   - <https://github.com/ramanlabs-in/hachi>
