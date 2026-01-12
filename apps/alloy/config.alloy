@@ -7,9 +7,8 @@ local.file_match "system" {
 }
 
 loki.source.file "system" {
-	targets               = local.file_match.system.targets
-	forward_to            = [loki.write.default.receiver]
-	legacy_positions_file = "/tmp/positions.yaml"
+	targets    = local.file_match.system.targets
+	forward_to = [loki.relabel.add_host.receiver]
 }
 
 discovery.relabel "journal" {
@@ -46,37 +45,36 @@ discovery.relabel "journal" {
 
 	rule {
 		source_labels = ["__journal_syslog_identifier"]
+		regex         = "(.+)"
 		target_label  = "syslog_identifier"
 	}
 }
 
 loki.source.journal "journal" {
-	max_age       = "12h0m0s"
-	path          = "/var/log/journal"
+	max_age       = "24h"
 	relabel_rules = discovery.relabel.journal.rules
-	forward_to    = [loki.write.default.receiver]
+	forward_to    = [loki.process.journal.receiver]
 	labels        = {
 		job = "systemd-journal",
 	}
 }
 
-discovery.docker "docker_socket" {
-	host             = "unix:///var/run/docker.sock"
-	refresh_interval = "5s"
+loki.process "journal" {
+	forward_to = [loki.relabel.add_host.receiver]
 
-	filter {
-		name   = "label"
-		values = ["logging=promtail"]
+	stage.structured_metadata {
+		values = {
+			boot_id = "__journal__boot_id",
+		}
 	}
 }
 
-loki.process "docker_socket" {
-	forward_to = [loki.write.default.receiver]
+discovery.docker "docker_socket" {
+	host = "unix:///var/run/docker.sock"
 
-	stage.static_labels {
-		values = {
-			job = "containerlogs",
-		}
+	filter {
+		name   = "label"
+		values = ["logging=alloy"]
 	}
 }
 
@@ -107,16 +105,42 @@ discovery.relabel "docker_socket" {
 }
 
 loki.source.docker "docker_socket" {
-	host             = "unix:///var/run/docker.sock"
-	targets          = discovery.docker.docker_socket.targets
-	forward_to       = [loki.process.docker_socket.receiver]
-	relabel_rules    = discovery.relabel.docker_socket.rules
-	refresh_interval = "5s"
+	host          = "unix:///var/run/docker.sock"
+	targets       = discovery.docker.docker_socket.targets
+	forward_to    = [loki.process.docker_socket.receiver]
+	relabel_rules = discovery.relabel.docker_socket.rules
+}
+
+loki.process "docker_socket" {
+	forward_to = [loki.relabel.add_host.receiver]
+
+	stage.static_labels {
+		values = {
+			job = "containerlogs",
+		}
+	}
+}
+
+loki.relabel "add_host" {
+	forward_to = [loki.process.drop_old_logs.receiver]
+
+	rule {
+		target_label = "instance"
+		replacement  = constants.hostname
+	}
+}
+
+loki.process "drop_old_logs" {
+	forward_to = [loki.write.default.receiver]
+
+	stage.drop {
+		older_than          = "168h" // 1w
+		drop_counter_reason = "too_old"
+	}
 }
 
 loki.write "default" {
 	endpoint {
 		url = "http://loki:3100/loki/api/v1/push"
 	}
-	external_labels = {}
 }

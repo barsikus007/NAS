@@ -28,21 +28,19 @@ services:
       - /etc/localtime:/etc/localtime:ro
       - ./apps/loki/local-config.yaml:/etc/loki/local-config.yaml:ro
     labels:
-      logging: promtail
+      logging: alloy
 
   alloy:
     image: grafana/alloy:latest
     container_name: alloy
     restart: always
-    # command: convert --source-format=promtail --output=/etc/alloy/config.alloy /etc/promtail/config.yml
     volumes:
-      # - ./apps/promtail/config.yml:/etc/promtail/config.yml:ro
       - /etc/localtime:/etc/localtime:ro
-      - ./apps/alloy/config.alloy:/etc/alloy/config.alloy:ro
+      - ./apps/alloy/config.alloy:/etc/alloy/config.alloy
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - /var/log:/var/log:ro
     labels:
-      logging: promtail
+      logging: alloy
     depends_on:
       - loki
 
@@ -96,7 +94,7 @@ services:
         EOF
         /run.sh
     labels:
-      logging: promtail
+      logging: alloy
       traefik.enable: true
       traefik.http.routers.grafana.rule: Host(`logs.${HOST?}`)
       traefik.http.routers.grafana.entrypoints: webSecure
@@ -132,7 +130,7 @@ services:
       - /etc/localtime:/etc/localtime:ro
       - ${APPDATA_VOLUME?}/lldap/:/data/
     labels:
-      logging: promtail
+      logging: alloy
       traefik.enable: true
       traefik.http.routers.lldap.rule: Host(`lldap.${HOST?}`)
       traefik.http.services.lldap-nas.loadbalancer.server.port: 17170
@@ -160,7 +158,7 @@ services:
       - ./apps/authelia/configuration.yml:/config/configuration.yml:ro
       - ${APPDATA_VOLUME?}/authelia/:/config/
     labels:
-      logging: promtail
+      logging: alloy
       traefik.enable: true
       traefik.http.routers.authelia.rule: Host(`auth.${HOST?}`)
       traefik.http.routers.authelia.entrypoints: webSecure
@@ -232,7 +230,7 @@ services:
       # Traefik dynamic configs
       - ./apps/traefik/:/etc/traefik/:ro
     labels:
-      logging: promtail
+      logging: alloy
 
   whoami:
     image: traefik/whoami:latest
@@ -241,7 +239,7 @@ services:
     volumes:
       - /etc/localtime:/etc/localtime:ro
     labels:
-      logging: promtail
+      logging: alloy
       traefik.enable: true
       traefik.http.routers.whoami.rule: Host(`whoami.${HOST?}`)
       traefik.http.routers.whoami.entrypoints: webSecure
@@ -260,7 +258,7 @@ services:
       - /etc/localtime:/etc/localtime:ro
       - ${APPDATA_VOLUME?}/organizr/:/config/
     labels:
-      logging: promtail
+      logging: alloy
       traefik.enable: true
       traefik.http.routers.organizr.rule: Host(`${HOST?}`) || Host(`www.${HOST?}`)
       traefik.http.services.organizr-nas.loadbalancer.server.scheme: http
@@ -289,7 +287,7 @@ services:
       - ./apps/crowdsec/acquis.yaml:/etc/crowdsec/acquis.yaml:ro
       - ${APPDATA_VOLUME?}/crowdsec/:/var/lib/crowdsec/data/
     labels:
-      logging: promtail
+      logging: alloy
     depends_on:
       - loki
 #endregion BASE
@@ -330,7 +328,7 @@ services:
       - nextcloud_aio_mastercontainer:/mnt/docker-aio-config/ # This line is not allowed to be changed as otherwise the built-in backup solution will not work
       - /var/run/docker.sock:/var/run/docker.sock:ro # May be changed on macOS, Windows or docker rootless. See the applicable documentation. If adjusting, don't forget to also set 'WATCHTOWER_DOCKER_SOCKET_PATH'!
     labels:
-      logging: promtail
+      logging: alloy
       traefik.enable: true
       traefik.http.routers.nextcloud-aio-mastercontainer.rule: Host(`aio-cloud.${HOST?}`)
       traefik.http.services.nextcloud-aio-mastercontainer-nas.loadbalancer.server.port: 8080
@@ -367,7 +365,7 @@ services:
       - ${STORAGE_VOLUME?}/downloads/:/downloads/
       - ${STORAGE_VOLUME?}/downloads/torrents/:/watch/
     labels:
-      logging: promtail
+      logging: alloy
       traefik.enable: true
       traefik.http.routers.transmission.rule: Host(`torrent.${HOST?}`)
       traefik.http.routers.transmission.entrypoints: webSecure
@@ -405,7 +403,7 @@ services:
     devices:
       *gpu-devices
     labels:
-      logging: promtail
+      logging: alloy
       traefik.enable: true
       traefik.http.routers.jellyfin.rule: Host(`media.${HOST?}`)
       traefik.http.services.jellyfin-nas.loadbalancer.server.port: 8096
@@ -423,7 +421,7 @@ services:
       - /etc/localtime:/etc/localtime:ro
       - ${APPDATA_VOLUME?}/vaultwarden/:/data/
     labels:
-      logging: promtail
+      logging: alloy
       traefik.enable: true
       traefik.http.routers.vaultwarden.rule: Host(`bitwarden.${HOST?}`)
       traefik.http.routers.vaultwarden.entrypoints: webSecure
@@ -446,7 +444,7 @@ services:
     volumes:
       - /etc/localtime:/etc/localtime:ro
     labels:
-      logging: promtail
+      logging: alloy
 
   prowlarr:
     # https://hub.docker.com/r/linuxserver/prowlarr
@@ -463,7 +461,7 @@ services:
       - /etc/localtime:/etc/localtime:ro
       - ${APPDATA_VOLUME?}/prowlarr/:/config/
     labels:
-      logging: promtail
+      logging: alloy
       traefik.enable: true
       traefik.http.routers.prowlarr.rule: Host(`prowlarr.${HOST?}`)
       traefik.http.routers.prowlarr.entrypoints: webSecure
@@ -486,7 +484,7 @@ services:
   #     - ${APPDATA_VOLUME?}/lidarr/:/config/
   #     - ${STORAGE_VOLUME?}/downloads/:/downloads/
   #   labels:
-  #     logging: promtail
+  #     logging: alloy
   #     traefik.enable: true
   #     traefik.http.routers.lidarr.rule: Host(`lidarr.${HOST?}`)
   #     traefik.http.routers.lidarr.entrypoints: webSecure
@@ -509,7 +507,7 @@ services:
       - ${APPDATA_VOLUME?}/radarr/:/config/
       - ${STORAGE_VOLUME?}/downloads/:/downloads/
     labels:
-      logging: promtail
+      logging: alloy
       traefik.enable: true
       traefik.http.routers.radarr.rule: Host(`radarr.${HOST?}`)
       traefik.http.routers.radarr.entrypoints: webSecure
@@ -532,7 +530,7 @@ services:
       - ${APPDATA_VOLUME?}/sonarr/:/config/
       - ${STORAGE_VOLUME?}/downloads/:/downloads/
     labels:
-      logging: promtail
+      logging: alloy
       traefik.enable: true
       traefik.http.routers.sonarr.rule: Host(`sonarr.${HOST?}`)
       traefik.http.routers.sonarr.entrypoints: webSecure
@@ -555,7 +553,7 @@ services:
       - ${APPDATA_VOLUME?}/tubesync/:/config/
       - ${STORAGE_VOLUME?}/downloads/media/youtube/:/downloads/
     labels:
-      logging: promtail
+      logging: alloy
       traefik.enable: true
       traefik.http.routers.tubesync.rule: Host(`youtube.${HOST?}`)
       traefik.http.routers.tubesync.entrypoints: webSecure
@@ -586,7 +584,7 @@ services:
       - ${APPDATA_VOLUME?}/syncthing/:/var/syncthing/config/
       - ${STORAGE_VOLUME?}/sync/:/var/syncthing/Sync/
     labels:
-      logging: promtail
+      logging: alloy
       traefik.enable: true
       traefik.http.routers.syncthing.rule: Host(`sync.${HOST?}`)
       traefik.http.routers.syncthing.entrypoints: webSecure
@@ -637,13 +635,13 @@ services:
       - ${APPDATA_VOLUME?}/gitlab/data/:/var/opt/gitlab/
     shm_size: '256m'
     labels:
-      logging: promtail
+      logging: alloy
       traefik.enable: true
       traefik.http.routers.gitlab.rule: Host(`gitlab.${HOST?}`)
       traefik.http.services.gitlab-nas.loadbalancer.server.port: 80
       traefik.http.routers.gitlab.entrypoints: webSecure
 
-      # traefik.http.routers.gitlab.middlewares: authelia@file
+      traefik.http.routers.gitlab.middlewares: authelia@file
 #endregion CLOUD
 
 #region GUI
@@ -670,7 +668,7 @@ services:
   #     *gpu-devices
   #   shm_size: '1gb'
   #   labels:
-  #     logging: promtail
+  #     logging: alloy
   #     traefik.enable: true
   #     traefik.http.routers.browser.rule: Host(`browser.${HOST?}`)
   #     traefik.http.routers.browser.entrypoints: webSecure
@@ -706,7 +704,7 @@ services:
       - ${APPDATA_VOLUME?}/samba/:/data/
       - ${STORAGE_VOLUME?}/:/samba/storage/
     labels:
-      logging: promtail
+      logging: alloy
 #endregion LocalServices
 
 #region MonitorServices
@@ -720,7 +718,7 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
       - ${APPDATA_VOLUME?}/portainer/:/data/
     labels:
-      logging: promtail
+      logging: alloy
       traefik.enable: true
       traefik.http.routers.portainer.rule: Host(`docker.${HOST?}`)
       traefik.http.services.portainer-nas.loadbalancer.server.port: 9000
@@ -751,7 +749,7 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - /etc/os-release:/etc/os-release:ro
     labels:
-      logging: promtail
+      logging: alloy
       traefik.enable: true
       traefik.http.routers.glances.rule: Host(`control.${HOST?}`)
       traefik.http.routers.glances.entrypoints: webSecure
@@ -777,7 +775,7 @@ services:
     devices:
       *disk-devices
     labels:
-      logging: promtail
+      logging: alloy
       traefik.enable: true
       traefik.http.routers.scrutiny.rule: Host(`smart-control.${HOST?}`)
       traefik.http.routers.scrutiny.entrypoints: webSecure
