@@ -30,6 +30,22 @@ services:
     labels:
       logging: promtail
 
+  alloy:
+    image: grafana/alloy:latest
+    container_name: alloy
+    restart: always
+    # command: convert --source-format=promtail --output=/etc/alloy/config.alloy /etc/promtail/config.yml
+    volumes:
+      # - ./apps/promtail/config.yml:/etc/promtail/config.yml:ro
+      - /etc/localtime:/etc/localtime:ro
+      - ./apps/alloy/config.alloy:/etc/alloy/config.alloy:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /var/log:/var/log:ro
+    labels:
+      logging: promtail
+    depends_on:
+      - loki
+
   promtail:
     image:  grafana/promtail:latest
     container_name: promtail

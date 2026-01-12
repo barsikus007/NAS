@@ -1,0 +1,122 @@
+local.file_match "system" {
+	path_targets = [{
+		__address__ = "localhost",
+		__path__    = "/var/log/*log",
+		job         = "varlogs",
+	}]
+}
+
+loki.source.file "system" {
+	targets               = local.file_match.system.targets
+	forward_to            = [loki.write.default.receiver]
+	legacy_positions_file = "/tmp/positions.yaml"
+}
+
+discovery.relabel "journal" {
+	targets = []
+
+	rule {
+		source_labels = ["__journal__hostname"]
+		target_label  = "host"
+	}
+
+	rule {
+		source_labels = ["__journal__systemd_unit"]
+		regex         = "(.+)"
+		target_label  = "systemd_unit"
+	}
+
+	rule {
+		source_labels = ["__journal__systemd_user_unit"]
+		regex         = "(.+)"
+		target_label  = "systemd_user_unit"
+	}
+
+	rule {
+		source_labels = ["__journal__transport"]
+		regex         = "(.+)"
+		target_label  = "transport"
+	}
+
+	rule {
+		source_labels = ["__journal_priority_keyword"]
+		regex         = "(.+)"
+		target_label  = "level"
+	}
+
+	rule {
+		source_labels = ["__journal_syslog_identifier"]
+		target_label  = "syslog_identifier"
+	}
+}
+
+loki.source.journal "journal" {
+	max_age       = "12h0m0s"
+	path          = "/var/log/journal"
+	relabel_rules = discovery.relabel.journal.rules
+	forward_to    = [loki.write.default.receiver]
+	labels        = {
+		job = "systemd-journal",
+	}
+}
+
+discovery.docker "docker_socket" {
+	host             = "unix:///var/run/docker.sock"
+	refresh_interval = "5s"
+
+	filter {
+		name   = "label"
+		values = ["logging=promtail"]
+	}
+}
+
+loki.process "docker_socket" {
+	forward_to = [loki.write.default.receiver]
+
+	stage.static_labels {
+		values = {
+			job = "containerlogs",
+		}
+	}
+}
+
+discovery.relabel "docker_socket" {
+	targets = []
+
+	rule {
+		source_labels = ["__meta_docker_container_name"]
+		regex         = "/(.*)"
+		target_label  = "container_name"
+	}
+
+	rule {
+		source_labels = ["__meta_docker_container_id"]
+		target_label  = "container_id"
+	}
+
+	rule {
+		source_labels = ["__meta_docker_container_log_stream"]
+		target_label  = "stream"
+	}
+
+	rule {
+		source_labels = ["__meta_docker_container_label_com_docker_compose_image"]
+		regex         = "sha256\\:(.*)"
+		target_label  = "image_id"
+	}
+}
+
+loki.source.docker "docker_socket" {
+	host             = "unix:///var/run/docker.sock"
+	targets          = discovery.docker.docker_socket.targets
+	forward_to       = [loki.process.docker_socket.receiver]
+	relabel_rules    = discovery.relabel.docker_socket.rules
+	refresh_interval = "5s"
+}
+
+loki.write "default" {
+	endpoint {
+		url = "http://loki:3100/loki/api/v1/push"
+	}
+	external_labels = {}
+}
