@@ -36,26 +36,11 @@ services:
     restart: always
     volumes:
       - /etc/localtime:/etc/localtime:ro
-      - ./apps/alloy/config.alloy:/etc/alloy/config.alloy
+      - ./apps/alloy/config.alloy:/etc/alloy/config.alloy:ro
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - /var/log:/var/log:ro
     labels:
       logging: alloy
-    depends_on:
-      - loki
-
-  promtail:
-    image:  grafana/promtail:latest
-    container_name: promtail
-    restart: always
-    # command: -config.file=/etc/promtail/config.yml
-    volumes:
-      - /etc/localtime:/etc/localtime:ro
-      - ./apps/promtail/config.yml:/etc/promtail/config.yml:ro
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-      - /var/log:/var/log:ro
-    labels:
-      logging: promtail
     depends_on:
       - loki
 

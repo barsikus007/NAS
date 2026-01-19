@@ -1,26 +1,26 @@
 {
-	"folders": [
-		{
-			"path": "."
-		},
-		{
-			"path": "/tank/apps"
-		}
-	],
-	"settings": {
+    "folders": [
+        {
+            "path": "."
+        },
+        {
+            "path": "/tank/apps"
+        }
+    ],
+    "settings": {
         "search.exclude": {
             "/tank/apps/": true
         }
     },
-	"extensions": {
-		"recommendations": [
-			"ms-azuretools.vscode-containers",
-			"davidanson.vscode-markdownlint",
-			"yzhang.markdown-all-in-one",
-			"bierner.github-markdown-preview",
-			"timonwong.shellcheck",
-			"editorconfig.editorconfig",
-			"docker.docker",
-		]
-	}
+    "extensions": {
+        "recommendations": [
+            "ms-azuretools.vscode-containers",
+            "davidanson.vscode-markdownlint",
+            "yzhang.markdown-all-in-one",
+            "bierner.github-markdown-preview",
+            "timonwong.shellcheck",
+            "editorconfig.editorconfig",
+            "docker.docker",
+        ]
+    }
 }
