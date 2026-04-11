@@ -32,7 +32,7 @@
   - Change TZ
   - Specify apps to install and install
     - I prefer to enable all except ClamAV (antivirus) and Docker Socket Proxy
-  - Specify backup location `/tank/backup` and generate password
+  - Specify backup location `/tank/storage/backups/dirs/nextcloud` and generate password
 - NextCloud `cloud.${HOST}`
   - `/settings`
     - `/apps/disabled`
@@ -131,13 +131,12 @@
     - whoami
 - alternate software
   - [seafile](https://www.seafile.com/en/home/) ? (check nextcloud speed)
-  - [Forgejo](https://forgejo.org/docs/latest/admin/installation/docker/) ? (instead of gitlab, less bloated?)
+    - OCIS
+  - [Forgejo](https://forgejo.org/docs/latest/admin/installation/docker/#using-rootless-image) ? (instead of gitlab, less bloated?)
 - new software
-  - <https://github.com/immich-app/immich>
   - <https://github.com/ramanlabs-in/hachi>
     - probably, on client with webdav
   - <https://github.com/fallenbagel/jellyseerr>
-  - <https://www.photoprism.app>
 - software late
   - VPN (wireguard)
     - inner
