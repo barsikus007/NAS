@@ -798,6 +798,63 @@ services:
 
     depends_on:
       - rustdesk-hbbr
+
+  notes:
+    container_name: quartz-notes
+    #! https://github.com/shommey/dockerized-quartz/issues/5#issuecomment-3746294519
+    #? https://github.com/Cartasiane/dockerized-quartz/pkgs/container/dockerized-quartz
+    image: ghcr.io/cartasiane/dockerized-quartz:ffd630c
+    # build:
+    #   dockerfile_inline: |
+    #     FROM ghcr.io/cartasiane/dockerized-quartz:ffd630c
+    #     RUN sed -i '6i sed -i "/transformers: \[/a \ \ \ \ \ \ Plugin.HardLineBreaks()," $$QUARTZ_DIR/quartz.config.ts' /usr/src/app/scripts/build-quartz.sh
+    restart: unless-stopped
+    command:
+      - /bin/sh
+      - -c
+      - |
+        sed -i '/npm audit fix/d' /usr/src/app/scripts/bootstrap.sh \
+        && /usr/src/app/scripts/bootstrap.sh
+    # command:
+    #   - /bin/sh
+    #   - -c
+    #   - |
+    #     sed -i '6i sed -i "/transformers: \[/a \ \ \ \ \ \ Plugin.HardLineBreaks()," $$QUARTZ_DIR/quartz.config.ts' /usr/src/app/scripts/build-quartz.sh \
+    #     && /usr/src/app/scripts/bootstrap.sh
+    environment:
+      # Use your custom Quartz repo or leave blank for the default Quartz repo
+      # GIT_REPO: "https://github.com/yourusername/your-quartz-site.git"
+
+      # Optional: specify a branch to checkout
+      # GIT_BRANCH: "v4"
+
+      # Optional: Update delay after which quartz build will trigger, default 300 seconds
+      BUILD_UPDATE_DELAY: 120
+
+      # Optional: Auto rebuild Quartz after change in Obsidian Vault
+      AUTO_REBUILD: true
+    volumes:
+      # Mount your Obsidian vault for Quartz to read and build the site from
+      # If not set it will mount docs
+      - ${STORAGE_VOLUME?}/sync/notes/public/:/vault/:ro
+      #
+      # Optional: Mount existing Quartz repo
+      - ${APPDATA_VOLUME?}/quartz/:/usr/src/app/quartz/
+      #
+      # Optional: Persist nginx logs if needed
+      # - /path/to/nginx/logs:/var/log/nginx
+      #
+      # Optional: Mount nginx conf
+      # - /path/on/host:/etc/nginx
+      # ports:
+      #   # Map any port on the host to port 80 in the container for web access
+      #   - "80:80"
+    labels:
+      logging: alloy
+      traefik.enable: true
+      traefik.http.routers.notes.rule: Host(`notes.${HOST?}`)
+
+      # traefik.http.routers.notes.middlewares: authelia@file
 #endregion Other
 
 
