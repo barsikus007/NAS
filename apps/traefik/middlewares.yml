@@ -11,7 +11,8 @@ http:
         # stsIncludeSubdomains: true
         contentTypeNosniff: true
         browserXssFilter: true
-        contentSecurityPolicy: 'frame-ancestors {{ env "HOST" }}'
+        contentSecurityPolicy: |
+          'self' frame-ancestors {{ env "HOST" }}
         referrerPolicy: "same-origin"
     gzip:
       compress: {}
