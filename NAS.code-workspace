@@ -10,7 +10,8 @@
     "settings": {
         "search.exclude": {
             "/tank/apps/": true
-        }
+        },
+        "terminal.integrated.cwd": "${fileWorkspaceFolder}",
     },
     "extensions": {
         "recommendations": [

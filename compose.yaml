@@ -1,17 +1,17 @@
 x-gpu-devices: &gpu-devices
   # BASE
-  - /dev/dri/
+  - /dev/dri
   # AMD GPU KFD
   - /dev/kfd
   # ROCKCHIP
-  # - /dev/rga/
-  # - /dev/dma_heap/
-  # - /dev/mpp_service/
+  # - /dev/rga
+  # - /dev/dma_heap
+  # - /dev/mpp_service
 
 x-disk-devices: &disk-devices
   - /dev/sda
   - /dev/sdb
-  - /dev/sdc
+  # - /dev/sdc
   # - /dev/sdd
 
 services:
@@ -49,6 +49,7 @@ services:
     container_name: grafana
     user: ${USER_ID?}
     restart: always
+    userns_mode: host
     healthcheck:
       test: curl http://localhost:3000/api/health || exit 1
     environment:
@@ -122,7 +123,7 @@ services:
       traefik.http.routers.lldap.middlewares: authelia@file
 
   authelia:
-    image: authelia/authelia:4.38
+    image: authelia/authelia:4.39
     container_name: authelia
     restart: unless-stopped
     secrets: [JWT_SECRET, AUTHENTICATION_BACKEND_LDAP_PASSWORD, SESSION_SECRET, STORAGE_ENCRYPTION_KEY]
@@ -149,10 +150,10 @@ services:
 
   traefik:
     # The official v3 Traefik docker image
-    #! https://github.com/traefik/traefik/issues/12055
-    image: traefik:v3.5.1
+    image: traefik:v3
     container_name: traefik
     restart: unless-stopped
+    userns_mode: host
     extra_hosts:
       - host.docker.internal:host-gateway
       - router:${ROUTER_IP}
@@ -253,6 +254,7 @@ services:
     image: crowdsecurity/crowdsec:latest
     container_name: crowdsec
     restart: always
+    userns_mode: host
     secrets: [bouncer_key_traefik]
     environment:
       #this is the list of collections we want to install
@@ -279,6 +281,7 @@ services:
     container_name: nextcloud-aio-mastercontainer # This line is not allowed to be changed as otherwise AIO will not work correctly
     init: true
     restart: always
+    # userns_mode: host
     # ports:
     #   - 80:80 # Can be removed when running behind a web server or reverse proxy (like Apache, Nginx, Cloudflare Tunnel and else). See https://github.com/nextcloud/all-in-one/blob/main/reverse-proxy.md
     #   - 8081:8080
@@ -652,9 +655,18 @@ services:
     image: crazymax/samba:latest
     container_name: samba
     restart: unless-stopped
-    network_mode: host
-    # ports:
-    #   - 445:445
+    ports:
+      - 135:135
+      - 137:137/udp
+      - 138:138/udp
+      - 139:139
+      - 445:445
+      #? WSD
+      - 3702:3702
+      - 3702:3702/udp
+      #? LLMNR
+      - 5355:5355
+      - 5355:5355/udp
     cap_add:
       - CAP_NET_ADMIN
       - CAP_NET_RAW
@@ -681,6 +693,7 @@ services:
     image: portainer/portainer:1.25.0
     container_name: portainer
     restart: unless-stopped
+    userns_mode: host
     command: -H unix:///var/run/docker.sock --no-auth
     volumes:
       - /etc/localtime:/etc/localtime:ro
@@ -694,19 +707,29 @@ services:
 
       traefik.http.routers.portainer.middlewares: authelia@file
 
-  watchtower:
-    image: containrrr/watchtower:latest
-    container_name: watchtower
+  whatsupdocker:
+    image: getwud/wud:latest
+    container_name: wud
     restart: unless-stopped
-    command: --cleanup --remove-volumes
+    userns_mode: host
+    environment:
+      - WUD_TRIGGER_DOCKER_LOCAL_PRUNE=true
+      - WUD_TRIGGER_DOCKER_LOCAL_THRESHOLD=patch
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - /var/run/docker.sock:/var/run/docker.sock
+    labels:
+      logging: alloy
+      traefik.enable: true
+      traefik.http.routers.whatsupdocker.rule: Host(`update.${HOST?}`)
+
+      traefik.http.routers.whatsupdocker.middlewares: authelia@file
 
   glances:
     image: nicolargo/glances:latest
     container_name: glances
     restart: unless-stopped
+    userns_mode: host
     pid: host
     environment:
       - GLANCES_OPT=-w
@@ -793,8 +816,9 @@ services:
     command:
       - /bin/sh
       - -c
-      - |
-        sed -i '/npm audit fix/d' /usr/src/app/scripts/bootstrap.sh \
+      - >
+        sed -i '/npm audit fix/d' /usr/src/app/scripts/bootstrap.sh
+        && chmod +x /usr/src/app/scripts/bootstrap.sh
         && /usr/src/app/scripts/bootstrap.sh
     # command:
     #   - /bin/sh
