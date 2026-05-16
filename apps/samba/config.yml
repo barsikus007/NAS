@@ -12,10 +12,7 @@ global:
 share:
   - name: storage
     path: /samba/storage
-    browsable: yes
     readonly: no
-    guestok: no
     validusers: ${USER}
     writelist: ${USER}
-    veto: no
     hidefiles: /_*/
