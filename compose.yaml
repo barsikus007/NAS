@@ -650,44 +650,6 @@ services:
   #     traefik.http.routers.browser.middlewares: authelia@file, gui-disable-security
 #endregion GUI
 
-#region LocalServices
-  samba:
-    image: crazymax/samba:latest
-    container_name: samba
-    restart: unless-stopped
-    ports:
-      - 135:135
-      - 137:137/udp
-      - 138:138/udp
-      - 139:139
-      - 445:445
-      #? WSD
-      - 3702:3702
-      - 3702:3702/udp
-      #? LLMNR
-      - 5355:5355
-      - 5355:5355/udp
-    cap_add:
-      - CAP_NET_ADMIN
-      - CAP_NET_RAW
-    environment:
-      - USER=${SAMBA_USER?}
-      - GROUP=${SAMBA_GROUP?}
-      - PASSWORD=${SAMBA_PASSWORD?}
-      - SAMBA_LOG_LEVEL=0
-      - WSDD2_ENABLE=1
-      - WSDD2_NETBIOS_NAME=NAS
-    env_file:
-      - lscr.env
-    volumes:
-      - /etc/localtime:/etc/localtime:ro
-      - ./apps/samba/config.yml:/data/config.yml:ro
-      - ${APPDATA_VOLUME?}/samba/:/data/
-      - ${STORAGE_VOLUME?}/:/samba/storage/
-    labels:
-      logging: alloy
-#endregion LocalServices
-
 #region MonitorServices
   portainer:
     image: portainer/portainer:1.25.0

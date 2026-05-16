@@ -110,7 +110,7 @@
   - is stopping organizr needed for patching?
   - why chown?
   - speedtest
-  - move samba and traefik to brand new dir
+  - move traefik to brand new dir
   - maybe add separate env file for acme provider
   - ldap
     - organizr
