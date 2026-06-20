@@ -17,13 +17,15 @@ x-disk-devices: &disk-devices
 services:
 #region LOGS
   loki:
-    #! https://github.com/grafana/loki/issues/19966
-    image: grafana/loki:3.5.7
+    image: grafana/loki:3
     container_name: loki
     restart: always
     healthcheck:
-      test: wget --quiet --tries=1 --output-document=- http://localhost:3100/ready | grep -qw ready || exit 1
-    # command: -config.file=/etc/loki/local-config.yaml
+      test: ["CMD", "/usr/bin/loki", "-health"]
+      start_period: 30s
+      interval: 10s
+      timeout: 5s
+      retries: 5
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - ./apps/loki/local-config.yaml:/etc/loki/local-config.yaml:ro
