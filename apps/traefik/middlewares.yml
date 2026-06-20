@@ -14,6 +14,10 @@ http:
         contentSecurityPolicy: |
           'self' frame-ancestors {{ env "HOST" }}
         referrerPolicy: "same-origin"
+    disable-app-iframe-security:
+      headers:
+        customResponseHeaders:
+          X-Frame-Options: ""
     gzip:
       compress: {}
     crowdsec:

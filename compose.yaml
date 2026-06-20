@@ -57,6 +57,7 @@ services:
       - GF_AUTH_ANONYMOUS_ENABLED=true
       - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
       - GF_SERVER_ROOT_URL=https://logs.${HOST?}
+      - GF_SECURITY_ALLOW_EMBEDDING=true
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - ${APPDATA_VOLUME?}/grafana/:/var/lib/grafana/
@@ -563,7 +564,7 @@ services:
       traefik.enable: true
       traefik.http.routers.syncthing.rule: Host(`sync.${HOST?}`)
 
-      traefik.http.routers.syncthing.middlewares: authelia@file
+      traefik.http.routers.syncthing.middlewares: authelia@file,disable-app-iframe-security@file
 
   gitlab:
     #? https://hub.docker.com/r/gitlab/gitlab-ce/tags?name=18.7
@@ -645,9 +646,7 @@ services:
   #     traefik.enable: true
   #     traefik.http.routers.browser.rule: Host(`browser.${HOST?}`)
 
-  #     traefik.http.middlewares.gui-disable-security.headers.contentSecurityPolicy: frame-ancestors browser.${HOST?}
-  #     # traefik.http.middlewares.gui-disable-security.headers.customResponseHeaders.Content-Security-Policy: ''
-  #     traefik.http.routers.browser.middlewares: authelia@file, gui-disable-security
+  #     traefik.http.routers.browser.middlewares: authelia@file, disable-app-iframe-security@file
 #endregion GUI
 
 #region MonitorServices
