@@ -529,9 +529,7 @@ services:
       context: .
       dockerfile_inline: |
         FROM ghcr.io/meeb/tubesync:latest
-        COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
-        RUN uv pip install --system --break-system-packages --upgrade \
-          "yt-dlp[default] @ https://github.com/yt-dlp/yt-dlp/archive/master.tar.gz"
+        RUN /usr/bin/env TUBESYNC_DEBUG=True bash /app/upgrade_yt-dlp.sh --pre
     container_name: tubesync
     restart: unless-stopped
     # ports:
