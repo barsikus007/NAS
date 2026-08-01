@@ -31,6 +31,8 @@
             "editorconfig.editorconfig",
             "docker.docker",
             "redhat.vscode-yaml",
+            "SashaBusinaro.yaml-compose-sorter",
+            "Jota0222.multi-formatter",
         ]
     }
 }

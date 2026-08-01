@@ -18,26 +18,27 @@ x-disk-devices: &disk-devices
 services:
   #region LOGS
   loki:
-    image: grafana/loki:3
     container_name: loki
+    image: grafana/loki:3
     restart: always
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ./apps/loki/local-config.yaml:/etc/loki/local-config.yaml:ro
+    labels:
+      logging: alloy
     healthcheck:
       test: ["CMD", "/usr/bin/loki", "-health"]
       start_period: 30s
       interval: 10s
       timeout: 5s
       retries: 5
-    volumes:
-      - /etc/localtime:/etc/localtime:ro
-      - ./apps/loki/local-config.yaml:/etc/loki/local-config.yaml:ro
-    labels:
-      logging: alloy
 
   alloy:
-    image: grafana/alloy:latest
     container_name: alloy
+    image: grafana/alloy:latest
     restart: always
-    userns_mode: host
+    depends_on:
+      - loki
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - ./apps/alloy/config.alloy:/etc/alloy/config.alloy:ro
@@ -45,26 +46,31 @@ services:
       - /var/log:/var/log:ro
     labels:
       logging: alloy
-    depends_on:
-      - loki
+    userns_mode: host
 
   grafana:
-    image: grafana/grafana-oss:latest
     container_name: grafana
-    user: ${USER_ID?}
+    image: grafana/grafana-oss:latest
     restart: always
-    userns_mode: host
-    healthcheck:
-      test: curl http://localhost:3000/api/health || exit 1
+    depends_on:
+      - loki
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ${APPDATA_VOLUME?}/grafana/:/var/lib/grafana/
     environment:
       - GF_PATHS_PROVISIONING=/etc/grafana/provisioning
       - GF_AUTH_ANONYMOUS_ENABLED=true
       - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
       - GF_SERVER_ROOT_URL=https://logs.${HOST?}
       - GF_SECURITY_ALLOW_EMBEDDING=true
-    volumes:
-      - /etc/localtime:/etc/localtime:ro
-      - ${APPDATA_VOLUME?}/grafana/:/var/lib/grafana/
+    labels:
+      logging: alloy
+      traefik.enable: true
+      traefik.http.routers.grafana.rule: Host(`logs.${HOST?}`)
+
+      traefik.http.routers.grafana.middlewares: authelia@file
+    healthcheck:
+      test: curl http://localhost:3000/api/health || exit 1
     entrypoint:
       - sh
       - -euc
@@ -84,21 +90,19 @@ services:
           editable: false
         EOF
         /run.sh
-    labels:
-      logging: alloy
-      traefik.enable: true
-      traefik.http.routers.grafana.rule: Host(`logs.${HOST?}`)
+    user: ${USER_ID?}
+    userns_mode: host
 
-      traefik.http.routers.grafana.middlewares: authelia@file
-    depends_on:
-      - loki
   #endregion LOGS
 
   #region BASE
   lldap:
-    image: lldap/lldap:stable
     container_name: lldap
+    image: lldap/lldap:stable
     restart: unless-stopped
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ${APPDATA_VOLUME?}/lldap/:/data/
     # ports:
     #   # For LDAP
     #   - 3890:389
@@ -116,9 +120,6 @@ services:
       - LLDAP_JWT_SECRET=${LDAP_SECRET?}
     env_file:
       - lscr.env
-    volumes:
-      - /etc/localtime:/etc/localtime:ro
-      - ${APPDATA_VOLUME?}/lldap/:/data/
     labels:
       logging: alloy
       traefik.enable: true
@@ -129,30 +130,30 @@ services:
 
   # persistent session store so authelia keeps sessions across reboots
   authelia-redis:
-    image: docker.io/valkey/valkey:9
     container_name: authelia-redis
+    image: docker.io/valkey/valkey:9
     restart: unless-stopped
-    # enable AOF + RDB so sessions survive container/host restarts
-    command: valkey-server --appendonly yes --save "60 1"
-    healthcheck:
-      test: valkey-cli ping || exit 1
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - ${APPDATA_VOLUME?}/authelia-redis/:/data/
     labels:
       logging: alloy
+    healthcheck:
+      test: valkey-cli ping || exit 1
+    # enable AOF + RDB so sessions survive container/host restarts
+    command: valkey-server --appendonly yes --save "60 1"
 
   authelia:
-    image: authelia/authelia:4.39
     container_name: authelia
+    image: authelia/authelia:4.39
     restart: unless-stopped
-    secrets:
-      [
-        JWT_SECRET,
-        AUTHENTICATION_BACKEND_LDAP_PASSWORD,
-        SESSION_SECRET,
-        STORAGE_ENCRYPTION_KEY,
-      ]
+    depends_on:
+      - lldap
+      - authelia-redis
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ./apps/authelia/configuration.yml:/config/configuration.yml:ro
+      - ${APPDATA_VOLUME?}/authelia/:/config/
     environment:
       - HOST=${HOST?}
       - X_AUTHELIA_CONFIG_FILTERS=template
@@ -163,25 +164,27 @@ services:
       - AUTHELIA_AUTHENTICATION_BACKEND_LDAP_BASE_DN=${LDAP_HOST?}
       - AUTHELIA_AUTHENTICATION_BACKEND_LDAP_USER=uid=${LDAP_BIND_ADMIN?},ou=people,${LDAP_HOST?}
       - AUTHELIA_ACCESS_CONTROL_DEFAULT_POLICY=${AUTHELIA_ACCESS_CONTROL_DEFAULT_POLICY?}
-    volumes:
-      - /etc/localtime:/etc/localtime:ro
-      - ./apps/authelia/configuration.yml:/config/configuration.yml:ro
-      - ${APPDATA_VOLUME?}/authelia/:/config/
     labels:
       logging: alloy
       traefik.enable: true
       traefik.http.routers.authelia.rule: Host(`auth.${HOST?}`)
-    depends_on:
-      - lldap
-      - authelia-redis
+    secrets:
+      [
+        JWT_SECRET,
+        AUTHENTICATION_BACKEND_LDAP_PASSWORD,
+        SESSION_SECRET,
+        STORAGE_ENCRYPTION_KEY,
+      ]
 
   #! vibefix for https://github.com/traefik/traefik/issues/13005
   # one-shot: vendor the crowdsec-bouncer plugin into a volume so traefik uses
   # localPlugins instead of downloading from plugins.traefik.io on every start
   # (without it, transient registry/DNS failure disables ALL plugins)
   traefik-plugins:
-    image: alpine/git:latest
     container_name: traefik-plugins
+    image: alpine/git:latest
+    volumes:
+      - ${APPDATA_VOLUME?}/traefik-plugins/:/plugins-local/
     environment:
       - PLUGIN_MODULE=github.com/maxlerebourg/crowdsec-bouncer-traefik-plugin
       #? https://plugins.traefik.io/plugins/6335346ca4caa9ddeffda116/crowdsec-bouncer-traefik-plugin
@@ -198,21 +201,15 @@ services:
         rm -rf "$$dest"; mkdir -p "$$dest"
         git clone --depth 1 --branch "$${PLUGIN_VERSION}" "https://$${PLUGIN_MODULE}.git" "$$dest"
         echo "$${PLUGIN_VERSION}" > "$$dest/.version"
-    volumes:
-      - ${APPDATA_VOLUME?}/traefik-plugins/:/plugins-local/
 
   traefik:
     # The official v3 Traefik docker image
-    image: traefik:v3
     container_name: traefik
+    image: traefik:v3
     restart: unless-stopped
     depends_on:
       traefik-plugins:
         condition: service_completed_successfully
-    userns_mode: host
-    extra_hosts:
-      - host.docker.internal:host-gateway
-      - router:${ROUTER_IP}
     ports:
       # The HTTP port
       - 80:80
@@ -220,6 +217,23 @@ services:
       - 443:443
       # The Web UI (enabled by --api.insecure=true)
       # - 8080:8080
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      # Create a letsencrypt dir within the folder where the docker-compose file is
+      - ${APPDATA_VOLUME?}/letsencrypt/:/letsencrypt/
+      # So that Traefik can listen to the Docker events
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      # Traefik dynamic configs
+      - ./apps/traefik/:/etc/traefik/:ro
+      # crowdsec-bouncer plugin source (localPlugins), vendored by traefik-plugins init
+      - ${APPDATA_VOLUME?}/traefik-plugins/:/plugins-local/:ro
+    environment:
+      - HOST=${HOST?}
+      - BOUNCER_KEY_TRAEFIK=${BOUNCER_KEY_TRAEFIK?}
+    env_file:
+      - .provider.env
+    labels:
+      logging: alloy
     healthcheck:
       test: traefik healthcheck --ping
     command:
@@ -258,27 +272,14 @@ services:
       # localPlugins: source vendored by the traefik-plugins init container into /plugins-local
       # (was --experimental.plugins.* which downloads from plugins.traefik.io on every start)
       - --experimental.localPlugins.crowdsec-bouncer.moduleName=github.com/maxlerebourg/crowdsec-bouncer-traefik-plugin
-    environment:
-      - HOST=${HOST?}
-      - BOUNCER_KEY_TRAEFIK=${BOUNCER_KEY_TRAEFIK?}
-    env_file:
-      - .provider.env
-    volumes:
-      - /etc/localtime:/etc/localtime:ro
-      # Create a letsencrypt dir within the folder where the docker-compose file is
-      - ${APPDATA_VOLUME?}/letsencrypt/:/letsencrypt/
-      # So that Traefik can listen to the Docker events
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-      # Traefik dynamic configs
-      - ./apps/traefik/:/etc/traefik/:ro
-      # crowdsec-bouncer plugin source (localPlugins), vendored by traefik-plugins init
-      - ${APPDATA_VOLUME?}/traefik-plugins/:/plugins-local/:ro
-    labels:
-      logging: alloy
+    extra_hosts:
+      - host.docker.internal:host-gateway
+      - router:${ROUTER_IP}
+    userns_mode: host
 
   whoami:
-    image: traefik/whoami:latest
     container_name: whoami
+    image: traefik/whoami:latest
     restart: unless-stopped
     volumes:
       - /etc/localtime:/etc/localtime:ro
@@ -288,18 +289,20 @@ services:
       traefik.http.routers.whoami.rule: Host(`whoami.${HOST?}`)
 
   organizr:
-    image: organizr/organizr:latest
     container_name: organizr
+    image: organizr/organizr:latest
     restart: unless-stopped
+    depends_on:
+      - authelia
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ${APPDATA_VOLUME?}/organizr/:/config/
     # ports:
     #   - 8080:80
     environment:
       - fpm=true # false by default
     env_file:
       - lscr.env
-    volumes:
-      - /etc/localtime:/etc/localtime:ro
-      - ${APPDATA_VOLUME?}/organizr/:/config/
     labels:
       logging: alloy
       traefik.enable: true
@@ -307,15 +310,17 @@ services:
       traefik.http.services.organizr-nas.loadbalancer.server.scheme: http
 
       traefik.http.routers.organizr.middlewares: authelia@file
-    depends_on:
-      - authelia
 
   crowdsec:
-    image: crowdsecurity/crowdsec:latest
     container_name: crowdsec
+    image: crowdsecurity/crowdsec:latest
     restart: always
-    userns_mode: host
-    secrets: [bouncer_key_traefik]
+    depends_on:
+      - loki
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ./apps/crowdsec/acquis.yaml:/etc/crowdsec/acquis.yaml:ro
+      - ${APPDATA_VOLUME?}/crowdsec/:/var/lib/crowdsec/data/
     environment:
       #this is the list of collections we want to install
       - COLLECTIONS=crowdsecurity/sshd crowdsecurity/http-dos crowdsecurity/traefik LePresidente/authelia LePresidente/jellyfin
@@ -325,22 +330,21 @@ services:
       - DISABLE_SCENARIOS=crowdsecurity/http-crawl-non_statics crowdsecurity/http-probing
     env_file:
       - lscr.env
-    volumes:
-      - /etc/localtime:/etc/localtime:ro
-      - ./apps/crowdsec/acquis.yaml:/etc/crowdsec/acquis.yaml:ro
-      - ${APPDATA_VOLUME?}/crowdsec/:/var/lib/crowdsec/data/
     labels:
       logging: alloy
-    depends_on:
-      - loki
+    secrets: [bouncer_key_traefik]
+    userns_mode: host
+
   #endregion BASE
 
   #region CLOUD
   nextcloud-aio-mastercontainer:
-    image: nextcloud/all-in-one:latest
     container_name: nextcloud-aio-mastercontainer # This line is not allowed to be changed as otherwise AIO will not work correctly
-    init: true
+    image: nextcloud/all-in-one:latest
     restart: always
+    volumes:
+      - nextcloud_aio_mastercontainer:/mnt/docker-aio-config/ # This line is not allowed to be changed as otherwise the built-in backup solution will not work
+      - /var/run/docker.sock:/var/run/docker.sock:ro # May be changed on macOS, Windows or docker rootless. See the applicable documentation. If adjusting, don't forget to also set 'WATCHTOWER_DOCKER_SOCKET_PATH'!
     # userns_mode: host
     # ports:
     #   - 80:80 # Can be removed when running behind a web server or reverse proxy (like Apache, Nginx, Cloudflare Tunnel and else). See https://github.com/nextcloud/all-in-one/blob/main/reverse-proxy.md
@@ -368,9 +372,6 @@ services:
       # - WATCHTOWER_DOCKER_SOCKET_PATH=/var/run/docker.sock # Needs to be specified if the docker socket on the host is not located in the default '/var/run/docker.sock'. Otherwise mastercontainer updates will fail. For macos it needs to be '/var/run/docker.sock'
     # networks: # Is needed when you want to create the nextcloud-aio network with ipv6-support using this file, see the network config at the bottom of the file
     #   - nextcloud-aio # Is needed when you want to create the nextcloud-aio network with ipv6-support using this file, see the network config at the bottom of the file
-    volumes:
-      - nextcloud_aio_mastercontainer:/mnt/docker-aio-config/ # This line is not allowed to be changed as otherwise the built-in backup solution will not work
-      - /var/run/docker.sock:/var/run/docker.sock:ro # May be changed on macOS, Windows or docker rootless. See the applicable documentation. If adjusting, don't forget to also set 'WATCHTOWER_DOCKER_SOCKET_PATH'!
     labels:
       logging: alloy
       traefik.enable: true
@@ -379,18 +380,22 @@ services:
       traefik.http.services.nextcloud-aio-mastercontainer-nas.loadbalancer.server.scheme: https
 
       traefik.http.routers.nextcloud-aio-mastercontainer.middlewares: authelia@file
+    init: true
 
   transmission:
     # https://hub.docker.com/r/linuxserver/transmission
-    image: lscr.io/linuxserver/transmission:latest
     container_name: transmission
+    image: lscr.io/linuxserver/transmission:latest
     restart: unless-stopped
     ports:
       # - 9091:9091
       - 51413:51413
       - 51413:51413/udp
-    healthcheck:
-      test: curl http://localhost:9091 || exit 1
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ${APPDATA_VOLUME?}/transmission/:/config/
+      - ${STORAGE_VOLUME?}/downloads/:/downloads/
+      - ${STORAGE_VOLUME?}/downloads/torrents/:/watch/
     # https://github.com/linuxserver/docker-mods/tree/transmission-env-var-settings
     # https://github.com/linuxserver/docker-mods/tree/transmission-transmissionic
     environment:
@@ -402,37 +407,24 @@ services:
       # - TRANSMISSION_ALT_SPEED_UP=256
     env_file:
       - lscr.env
-    volumes:
-      - /etc/localtime:/etc/localtime:ro
-      - ${APPDATA_VOLUME?}/transmission/:/config/
-      - ${STORAGE_VOLUME?}/downloads/:/downloads/
-      - ${STORAGE_VOLUME?}/downloads/torrents/:/watch/
     labels:
       logging: alloy
       traefik.enable: true
       traefik.http.routers.transmission.rule: Host(`torrent.${HOST?}`)
 
       traefik.http.routers.transmission.middlewares: authelia@file
+    healthcheck:
+      test: curl http://localhost:9091 || exit 1
 
   jellyfin:
     # https://hub.docker.com/r/linuxserver/jellyfin
-    image: lscr.io/linuxserver/jellyfin:latest
-    group_add: # by id as these may not exist within the container. Needed to provide permissions to the VAAPI Devices
-      - "107" #render
-      - "44" #video
     container_name: jellyfin
+    image: lscr.io/linuxserver/jellyfin:latest
     restart: unless-stopped
     ports:
       - 8096:8096
       - 1900:1900/udp
       - 7359:7359/udp
-    healthcheck:
-      test: curl http://localhost:8096/health || exit 1
-      retries: 6
-    environment:
-      - JELLYFIN_PublishedServerUrl=${LAN_HOST?}
-    env_file:
-      - lscr.env
     volumes:
       - /etc/localtime:/etc/localtime:ro
       # https://app.crowdsec.net/hub/author/LePresidente/collections/jellyfin
@@ -442,19 +434,26 @@ services:
       - ${STORAGE_VOLUME?}/downloads/media/tvshows/:/data/tvshows/
       - ${STORAGE_VOLUME?}/downloads/media/movies/:/data/movies/
       - ${STORAGE_VOLUME?}/downloads/media/music/:/data/music/
-    devices: *gpu-devices
+    environment:
+      - JELLYFIN_PublishedServerUrl=${LAN_HOST?}
+    env_file:
+      - lscr.env
     labels:
       logging: alloy
       traefik.enable: true
       traefik.http.routers.jellyfin.rule: Host(`media.${HOST?}`)
       traefik.http.services.jellyfin-nas.loadbalancer.server.port: 8096
+    healthcheck:
+      test: curl http://localhost:8096/health || exit 1
+      retries: 6
+    devices: *gpu-devices
+    group_add: # by id as these may not exist within the container. Needed to provide permissions to the VAAPI Devices
+      - "44" #video
+      - "107" #render
 
   lampac:
-    image: ghcr.io/lampac-nextgen/lampac
     container_name: lampac
-    # ports:
-    #   - 9118:9118
-    shm_size: 1024mb
+    image: ghcr.io/lampac-nextgen/lampac
     restart: unless-stopped
     #! configs here are SHIT
     #? https://alcofuck.net/modules.html
@@ -471,18 +470,21 @@ services:
       - ${APPDATA_VOLUME?}/lampac/cache/:/lampac/cache/
       - ${APPDATA_VOLUME?}/lampac/database/:/lampac/database/
       - ${APPDATA_VOLUME?}/lampac/ts/:/lampac/data/ts/
-    devices: *gpu-devices
     labels:
       logging: alloy
       traefik.enable: true
       traefik.http.routers.lampac.rule: Host(`lampac.${HOST?}`)
 
       traefik.http.routers.lampac.middlewares: authelia@file
+    devices: *gpu-devices
+    # ports:
+    #   - 9118:9118
+    shm_size: 1024mb
 
   tubesync:
     # https://github.com/meeb/tubesync
-    image: ghcr.io/meeb/tubesync:latest
     container_name: tubesync
+    image: ghcr.io/meeb/tubesync:latest
     restart: unless-stopped
     # ports:
     #   - 4848:4848
@@ -498,43 +500,48 @@ services:
       traefik.http.routers.tubesync.middlewares: authelia@file
 
   syncthing:
-    image: syncthing/syncthing:latest
     container_name: syncthing
+    image: syncthing/syncthing:latest
     restart: unless-stopped
-    hostname: sync.${HOST?}
     ports:
       # - 8384:8384 # Web UI
       - 22000:22000/tcp # TCP file transfers
       - 22000:22000/udp # QUIC file transfers
       - 21027:21027/udp # Receive local discovery broadcasts
-    healthcheck:
-      test: curl -fkLsS -m 2 127.0.0.1:8384/rest/noauth/health | grep -o --color=never OK || exit 1
-      interval: 1m
-      timeout: 10s
-      retries: 3
-    # environment:
-    #   - PCAP=cap_chown,cap_fowner+ep
-    env_file:
-      - lscr.env
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - ${APPDATA_VOLUME?}/syncthing/:/var/syncthing/config/
       - ${STORAGE_VOLUME?}/sync/:/var/syncthing/Sync/
+    # environment:
+    #   - PCAP=cap_chown,cap_fowner+ep
+    env_file:
+      - lscr.env
     labels:
       logging: alloy
       traefik.enable: true
       traefik.http.routers.syncthing.rule: Host(`sync.${HOST?}`)
 
       traefik.http.routers.syncthing.middlewares: authelia@file
+    healthcheck:
+      test: curl -fkLsS -m 2 127.0.0.1:8384/rest/noauth/health | grep -o --color=never OK || exit 1
+      interval: 1m
+      timeout: 10s
+      retries: 3
+    hostname: sync.${HOST?}
 
   gitlab:
     #? https://hub.docker.com/r/gitlab/gitlab-ce/tags?name=18.7
-    image: gitlab/gitlab-ce:latest
     # image: yrzr/gitlab-ce-arm64v8:latest
     container_name: gitlab
+    image: gitlab/gitlab-ce:latest
     restart: unless-stopped
     ports:
       - 22222:22
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ${APPDATA_VOLUME?}/gitlab/config/:/etc/gitlab/
+      - ${APPDATA_VOLUME?}/gitlab/logs/:/var/log/gitlab/
+      - ${APPDATA_VOLUME?}/gitlab/data/:/var/opt/gitlab/
     environment:
       GITLAB_OMNIBUS_CONFIG: |
         external_url 'https://gitlab.${HOST?}'
@@ -564,12 +571,6 @@ services:
             }
           }
         }
-    volumes:
-      - /etc/localtime:/etc/localtime:ro
-      - ${APPDATA_VOLUME?}/gitlab/config/:/etc/gitlab/
-      - ${APPDATA_VOLUME?}/gitlab/logs/:/var/log/gitlab/
-      - ${APPDATA_VOLUME?}/gitlab/data/:/var/opt/gitlab/
-    shm_size: "256m"
     labels:
       logging: alloy
       traefik.enable: true
@@ -577,15 +578,19 @@ services:
       traefik.http.services.gitlab-nas.loadbalancer.server.port: 80
 
       traefik.http.routers.gitlab.middlewares: authelia@file
+    shm_size: "256m"
+
   #endregion CLOUD
 
   #region GUI
   browser:
     # https://hub.docker.com/r/linuxserver/chromium
-    image: lscr.io/linuxserver/chromium:latest
     # https://hub.docker.com/r/linuxserver/firefox
     # image: lscr.io/linuxserver/firefox:latest
     container_name: browser
+    image: lscr.io/linuxserver/chromium:latest
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
     # security_opt:
     #   - seccomp:unconfined #optional
     # ports:
@@ -597,25 +602,22 @@ services:
     #   - FIREFOX_CLI=https://www.linuxserver.io/ #optional
     env_file:
       - lscr.env
-    volumes:
-      - /etc/localtime:/etc/localtime:ro
-    devices: *gpu-devices
-    shm_size: "1gb"
     labels:
       logging: alloy
       traefik.enable: true
       traefik.http.routers.browser.rule: Host(`browser.${HOST?}`)
 
       traefik.http.routers.browser.middlewares: authelia@file
+    devices: *gpu-devices
+    shm_size: "1gb"
+
   #endregion GUI
 
   #region MonitorServices
   portainer:
-    image: portainer/portainer:1.25.0
     container_name: portainer
+    image: portainer/portainer:1.25.0
     restart: unless-stopped
-    userns_mode: host
-    command: -H unix:///var/run/docker.sock --no-auth
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - /var/run/docker.sock:/var/run/docker.sock
@@ -627,69 +629,72 @@ services:
       traefik.http.services.portainer-nas.loadbalancer.server.port: 9000
 
       traefik.http.routers.portainer.middlewares: authelia@file
+    command: -H unix:///var/run/docker.sock --no-auth
+    userns_mode: host
 
   whatsupdocker:
-    image: getwud/wud:latest
     container_name: wud
+    image: getwud/wud:latest
     restart: unless-stopped
-    userns_mode: host
-    environment:
-      - WUD_TRIGGER_DOCKER_LOCAL_PRUNE=true
-      - WUD_TRIGGER_DOCKER_LOCAL_THRESHOLD=patch
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - WUD_TRIGGER_DOCKER_LOCAL_PRUNE=true
+      - WUD_TRIGGER_DOCKER_LOCAL_THRESHOLD=patch
     labels:
       logging: alloy
       traefik.enable: true
       traefik.http.routers.whatsupdocker.rule: Host(`update.${HOST?}`)
 
       traefik.http.routers.whatsupdocker.middlewares: authelia@file
+    userns_mode: host
 
   glances:
-    image: nicolargo/glances:latest
     container_name: glances
+    image: nicolargo/glances:latest
     restart: unless-stopped
-    userns_mode: host
-    pid: host
-    environment:
-      - GLANCES_OPT=-w
-    env_file:
-      - lscr.env
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - /etc/os-release:/etc/os-release:ro
+    environment:
+      - GLANCES_OPT=-w
+    env_file:
+      - lscr.env
     labels:
       logging: alloy
       traefik.enable: true
       traefik.http.routers.glances.rule: Host(`control.${HOST?}`)
 
       traefik.http.routers.glances.middlewares: authelia@file
+    pid: host
+    userns_mode: host
 
   scrutiny:
     # https://github.com/AnalogJ/scrutiny
     # https://glances.readthedocs.io/en/latest/cmds.html#interactive-commands
-    image: ghcr.io/analogj/scrutiny:master-omnibus
     container_name: scrutiny
+    image: ghcr.io/analogj/scrutiny:master-omnibus
     restart: unless-stopped
-    # ports:
-    #   - 8080:8080 # webapp
-    #   - 8086:8086 # influxDB admin
-    cap_add:
-      - SYS_RAWIO
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - /run/udev:/run/udev:ro
       - ${APPDATA_VOLUME?}/scrutiny/config/:/opt/scrutiny/config/
       - ${APPDATA_VOLUME?}/scrutiny/influxdb/:/opt/scrutiny/influxdb/
-    devices: *disk-devices
     labels:
       logging: alloy
       traefik.enable: true
       traefik.http.routers.scrutiny.rule: Host(`smart-control.${HOST?}`)
 
       traefik.http.routers.scrutiny.middlewares: authelia@file
+    # ports:
+    #   - 8080:8080 # webapp
+    #   - 8086:8086 # influxDB admin
+    cap_add:
+      - SYS_RAWIO
+    devices: *disk-devices
+
   #endregion MonitorServices
 
   #region Other
@@ -697,19 +702,21 @@ services:
     container_name: rustdesk-hbbr
     image: rustdesk/rustdesk-server:latest
     restart: unless-stopped
-    command: hbbr
     ports:
       - 21117:21117 # used for the Relay services.
       - 21119:21119 # used to support web clients.
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - ${APPDATA_VOLUME?}/rustdesk/:/root/
+    command: hbbr
 
   rustdesk-hbbs:
     container_name: rustdesk-hbbs
     image: rustdesk/rustdesk-server:latest
     restart: unless-stopped
-    command: hbbs
+
+    depends_on:
+      - rustdesk-hbbr
     ports:
       - 21114:21114 # used for web console, only available in Pro version.
       - 21115:21115 # used for the NAT type test.
@@ -719,9 +726,7 @@ services:
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - ${APPDATA_VOLUME?}/rustdesk/:/root/
-
-    depends_on:
-      - rustdesk-hbbr
+    command: hbbs
 
   notes:
     container_name: quartz-notes
@@ -733,31 +738,6 @@ services:
     #     FROM ghcr.io/cartasiane/dockerized-quartz:ffd630c
     #     RUN sed -i '6i sed -i "/transformers: \[/a \ \ \ \ \ \ Plugin.HardLineBreaks()," $$QUARTZ_DIR/quartz.config.ts' /usr/src/app/scripts/build-quartz.sh
     restart: unless-stopped
-    command:
-      - /bin/sh
-      - -c
-      - >
-        sed -i '/npm audit fix/d' /usr/src/app/scripts/bootstrap.sh
-        && chmod +x /usr/src/app/scripts/bootstrap.sh
-        && /usr/src/app/scripts/bootstrap.sh
-    # command:
-    #   - /bin/sh
-    #   - -c
-    #   - |
-    #     sed -i '6i sed -i "/transformers: \[/a \ \ \ \ \ \ Plugin.HardLineBreaks()," $$QUARTZ_DIR/quartz.config.ts' /usr/src/app/scripts/build-quartz.sh \
-    #     && /usr/src/app/scripts/bootstrap.sh
-    environment:
-      # Use your custom Quartz repo or leave blank for the default Quartz repo
-      # GIT_REPO: "https://github.com/yourusername/your-quartz-site.git"
-
-      # Optional: specify a branch to checkout
-      # GIT_BRANCH: "v4"
-
-      # Optional: Update delay after which quartz build will trigger, default 300 seconds
-      BUILD_UPDATE_DELAY: 120
-
-      # Optional: Auto rebuild Quartz after change in Obsidian Vault
-      AUTO_REBUILD: true
     volumes:
       # Mount your Obsidian vault for Quartz to read and build the site from
       # If not set it will mount docs
@@ -774,13 +754,40 @@ services:
       # ports:
       #   # Map any port on the host to port 80 in the container for web access
       #   - "80:80"
+      # command:
+      #   - /bin/sh
+      #   - -c
+      #   - |
+      #     sed -i '6i sed -i "/transformers: \[/a \ \ \ \ \ \ Plugin.HardLineBreaks()," $$QUARTZ_DIR/quartz.config.ts' /usr/src/app/scripts/build-quartz.sh \
+      #     && /usr/src/app/scripts/bootstrap.sh
+    environment:
+      # Use your custom Quartz repo or leave blank for the default Quartz repo
+      # GIT_REPO: "https://github.com/yourusername/your-quartz-site.git"
+
+      # Optional: specify a branch to checkout
+      # GIT_BRANCH: "v4"
+
+      # Optional: Update delay after which quartz build will trigger, default 300 seconds
+      BUILD_UPDATE_DELAY: 120
+
+      # Optional: Auto rebuild Quartz after change in Obsidian Vault
+      AUTO_REBUILD: true
     labels:
       logging: alloy
       traefik.enable: true
       traefik.http.routers.notes.rule: Host(`notes.${HOST?}`)
-
       # traefik.http.routers.notes.middlewares: authelia@file
-#endregion Other
+      #endregion Other
+
+    command:
+      - /bin/sh
+      - -c
+      - >
+        sed -i '/npm audit fix/d' /usr/src/app/scripts/bootstrap.sh && chmod +x /usr/src/app/scripts/bootstrap.sh && /usr/src/app/scripts/bootstrap.sh
+
+volumes:
+  nextcloud_aio_mastercontainer:
+    name: nextcloud_aio_mastercontainer # This line is not allowed to be changed as otherwise the built-in backup solution will not work
 
 secrets:
   JWT_SECRET:
@@ -793,7 +800,3 @@ secrets:
     environment: AUTHELIA_SECRET
   bouncer_key_traefik:
     environment: BOUNCER_KEY_TRAEFIK
-
-volumes:
-  nextcloud_aio_mastercontainer:
-    name: nextcloud_aio_mastercontainer # This line is not allowed to be changed as otherwise the built-in backup solution will not work
