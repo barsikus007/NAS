@@ -393,23 +393,6 @@ services:
       traefik.http.routers.jellyfin.rule: Host(`media.${HOST?}`)
       traefik.http.services.jellyfin-nas.loadbalancer.server.port: 8096
 
-  vaultwarden:
-    image: vaultwarden/server:latest
-    container_name: vaultwarden
-    restart: unless-stopped
-    # ports:
-    #   - 80:80
-    env_file:
-      - lscr.env
-    volumes:
-      - /etc/localtime:/etc/localtime:ro
-      - ${APPDATA_VOLUME?}/vaultwarden/:/data/
-    labels:
-      logging: alloy
-      traefik.enable: true
-      traefik.http.routers.vaultwarden.rule: Host(`bitwarden.${HOST?}`)
-
-      # traefik.http.routers.vaultwarden.middlewares: authelia@file
 #endregion CLOUD
 
 #region Servarr

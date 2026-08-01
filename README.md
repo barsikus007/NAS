@@ -67,7 +67,6 @@
       - gitlab.${HOST} (TODO)
       - whoami.${HOST} (for testing purposes)
       - media.${HOST} -> jellyfin (for non-web apps)
-      - bitwarden.${HOST} -> vaultwarden (TODO)
       - cloud.${HOST} -> nextcloud (TODO)
       - auth.${HOST} -> authelia
       - rest services use authelia auth

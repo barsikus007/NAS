@@ -24,13 +24,6 @@ labels:
 source: loki
 url: http://loki:3100/
 query: |
-  {service_name="vaultwarden"}
-labels:
-  type: vaultwarden
----
-source: loki
-url: http://loki:3100/
-query: |
   {filename="/var/log/auth.log"}
 labels:
   type: syslog
