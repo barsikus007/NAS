@@ -1,4 +1,5 @@
 x-gpu-devices: &gpu-devices
+  #
   # BASE
   - /dev/dri
   # AMD GPU KFD
@@ -10,12 +11,12 @@ x-gpu-devices: &gpu-devices
 
 x-disk-devices: &disk-devices
   - /dev/sda
-  - /dev/sdb
+  # - /dev/sdb
   # - /dev/sdc
   # - /dev/sdd
 
 services:
-#region LOGS
+  #region LOGS
   loki:
     image: grafana/loki:3
     container_name: loki
@@ -36,6 +37,7 @@ services:
     image: grafana/alloy:latest
     container_name: alloy
     restart: always
+    userns_mode: host
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - ./apps/alloy/config.alloy:/etc/alloy/config.alloy:ro
@@ -90,20 +92,20 @@ services:
       traefik.http.routers.grafana.middlewares: authelia@file
     depends_on:
       - loki
-#endregion LOGS
+  #endregion LOGS
 
-#region BASE
+  #region BASE
   lldap:
     image: lldap/lldap:stable
     container_name: lldap
     restart: unless-stopped
     # ports:
-      # For LDAP
-      # - 3890:389
-      # For LDAPS (LDAP Over SSL), enable port if LLDAP_LDAPS_OPTIONS__ENABLED set true, look env below
-      # - 6360:6360
-      # For the web front-end
-      # - 17170:17170
+    #   # For LDAP
+    #   - 3890:389
+    #   # For LDAPS (LDAP Over SSL), enable port if LLDAP_LDAPS_OPTIONS__ENABLED set true, look env below
+    #   - 6360:6360
+    #   # For the web front-end
+    #   - 17170:17170
     environment:
       - LLDAP_HTTP_URL=https://lldap.${HOST?}
       - LLDAP_LDAP_PORT=389
@@ -144,7 +146,13 @@ services:
     image: authelia/authelia:4.39
     container_name: authelia
     restart: unless-stopped
-    secrets: [JWT_SECRET, AUTHENTICATION_BACKEND_LDAP_PASSWORD, SESSION_SECRET, STORAGE_ENCRYPTION_KEY]
+    secrets:
+      [
+        JWT_SECRET,
+        AUTHENTICATION_BACKEND_LDAP_PASSWORD,
+        SESSION_SECRET,
+        STORAGE_ENCRYPTION_KEY,
+      ]
     environment:
       - HOST=${HOST?}
       - X_AUTHELIA_CONFIG_FILTERS=template
@@ -286,7 +294,7 @@ services:
     # ports:
     #   - 8080:80
     environment:
-      - fpm=true  # false by default
+      - fpm=true # false by default
     env_file:
       - lscr.env
     volumes:
@@ -325,9 +333,9 @@ services:
       logging: alloy
     depends_on:
       - loki
-#endregion BASE
+  #endregion BASE
 
-#region CLOUD
+  #region CLOUD
   nextcloud-aio-mastercontainer:
     image: nextcloud/all-in-one:latest
     container_name: nextcloud-aio-mastercontainer # This line is not allowed to be changed as otherwise AIO will not work correctly
@@ -359,7 +367,7 @@ services:
       # - TALK_PORT=3478 # This allows to adjust the port that the talk container is using. See https://github.com/nextcloud/all-in-one#how-to-adjust-the-talk-port
       # - WATCHTOWER_DOCKER_SOCKET_PATH=/var/run/docker.sock # Needs to be specified if the docker socket on the host is not located in the default '/var/run/docker.sock'. Otherwise mastercontainer updates will fail. For macos it needs to be '/var/run/docker.sock'
     # networks: # Is needed when you want to create the nextcloud-aio network with ipv6-support using this file, see the network config at the bottom of the file
-      # - nextcloud-aio # Is needed when you want to create the nextcloud-aio network with ipv6-support using this file, see the network config at the bottom of the file
+    #   - nextcloud-aio # Is needed when you want to create the nextcloud-aio network with ipv6-support using this file, see the network config at the bottom of the file
     volumes:
       - nextcloud_aio_mastercontainer:/mnt/docker-aio-config/ # This line is not allowed to be changed as otherwise the built-in backup solution will not work
       - /var/run/docker.sock:/var/run/docker.sock:ro # May be changed on macOS, Windows or docker rootless. See the applicable documentation. If adjusting, don't forget to also set 'WATCHTOWER_DOCKER_SOCKET_PATH'!
@@ -410,8 +418,8 @@ services:
     # https://hub.docker.com/r/linuxserver/jellyfin
     image: lscr.io/linuxserver/jellyfin:latest
     group_add: # by id as these may not exist within the container. Needed to provide permissions to the VAAPI Devices
-      - '107' #render
-      - '44' #video
+      - "107" #render
+      - "44" #video
     container_name: jellyfin
     restart: unless-stopped
     ports:
@@ -434,8 +442,7 @@ services:
       - ${STORAGE_VOLUME?}/downloads/media/tvshows/:/data/tvshows/
       - ${STORAGE_VOLUME?}/downloads/media/movies/:/data/movies/
       - ${STORAGE_VOLUME?}/downloads/media/music/:/data/music/
-    devices:
-      *gpu-devices
+    devices: *gpu-devices
     labels:
       logging: alloy
       traefik.enable: true
@@ -562,7 +569,7 @@ services:
       - ${APPDATA_VOLUME?}/gitlab/config/:/etc/gitlab/
       - ${APPDATA_VOLUME?}/gitlab/logs/:/var/log/gitlab/
       - ${APPDATA_VOLUME?}/gitlab/data/:/var/opt/gitlab/
-    shm_size: '256m'
+    shm_size: "256m"
     labels:
       logging: alloy
       traefik.enable: true
@@ -570,9 +577,9 @@ services:
       traefik.http.services.gitlab-nas.loadbalancer.server.port: 80
 
       traefik.http.routers.gitlab.middlewares: authelia@file
-#endregion CLOUD
+  #endregion CLOUD
 
-#region GUI
+  #region GUI
   browser:
     # https://hub.docker.com/r/linuxserver/chromium
     image: lscr.io/linuxserver/chromium:latest
@@ -600,9 +607,9 @@ services:
       traefik.http.routers.browser.rule: Host(`browser.${HOST?}`)
 
       traefik.http.routers.browser.middlewares: authelia@file
-#endregion GUI
+  #endregion GUI
 
-#region MonitorServices
+  #region MonitorServices
   portainer:
     image: portainer/portainer:1.25.0
     container_name: portainer
@@ -676,25 +683,24 @@ services:
       - /run/udev:/run/udev:ro
       - ${APPDATA_VOLUME?}/scrutiny/config/:/opt/scrutiny/config/
       - ${APPDATA_VOLUME?}/scrutiny/influxdb/:/opt/scrutiny/influxdb/
-    devices:
-      *disk-devices
+    devices: *disk-devices
     labels:
       logging: alloy
       traefik.enable: true
       traefik.http.routers.scrutiny.rule: Host(`smart-control.${HOST?}`)
 
       traefik.http.routers.scrutiny.middlewares: authelia@file
-#endregion MonitorServices
+  #endregion MonitorServices
 
-#region Other
+  #region Other
   rustdesk-hbbr:
     container_name: rustdesk-hbbr
     image: rustdesk/rustdesk-server:latest
     restart: unless-stopped
     command: hbbr
     ports:
-      - 21117:21117  # used for the Relay services.
-      - 21119:21119  # used to support web clients.
+      - 21117:21117 # used for the Relay services.
+      - 21119:21119 # used to support web clients.
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - ${APPDATA_VOLUME?}/rustdesk/:/root/
@@ -705,11 +711,11 @@ services:
     restart: unless-stopped
     command: hbbs
     ports:
-      - 21114:21114  # used for web console, only available in Pro version.
-      - 21115:21115  # used for the NAT type test.
-      - 21116:21116  # used for TCP hole punching and connection service.
-      - 21116:21116/udp  # used for the ID registration and heartbeat service.
-      - 21118:21118  # used to support web clients.
+      - 21114:21114 # used for web console, only available in Pro version.
+      - 21115:21115 # used for the NAT type test.
+      - 21116:21116 # used for TCP hole punching and connection service.
+      - 21116:21116/udp # used for the ID registration and heartbeat service.
+      - 21118:21118 # used to support web clients.
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - ${APPDATA_VOLUME?}/rustdesk/:/root/
@@ -776,7 +782,6 @@ services:
       # traefik.http.routers.notes.middlewares: authelia@file
 #endregion Other
 
-
 secrets:
   JWT_SECRET:
     environment: AUTHELIA_SECRET
@@ -788,7 +793,6 @@ secrets:
     environment: AUTHELIA_SECRET
   bouncer_key_traefik:
     environment: BOUNCER_KEY_TRAEFIK
-
 
 volumes:
   nextcloud_aio_mastercontainer:

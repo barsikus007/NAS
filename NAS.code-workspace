@@ -12,6 +12,14 @@
             "/tank/apps/": true,
         },
         "terminal.integrated.cwd": "${fileWorkspaceFolder}",
+        "yaml.schemas": {
+            "https://www.schemastore.org/traefik-v2.json": [
+                "file:///home/ogurez/NAS/apps/traefik/dashboard.yml",
+                "file:///home/ogurez/NAS/apps/traefik/nextcloud.yml",
+                "file:///home/ogurez/NAS/apps/traefik/router.yml"
+            ],
+            "https://www.schemastore.org/loki.json": "file:///tank/storage/projects/own_selfhost/NAS/apps/loki/local-config.yaml"
+        },
     },
     "extensions": {
         "recommendations": [
@@ -22,6 +30,7 @@
             "timonwong.shellcheck",
             "editorconfig.editorconfig",
             "docker.docker",
+            "redhat.vscode-yaml",
         ]
     }
 }
