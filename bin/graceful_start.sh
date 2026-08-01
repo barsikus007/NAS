@@ -1,6 +1,6 @@
 #!/bin/sh
 
-docker compose up -d --wait traefik organizr lldap authelia crowdsec loki nextcloud-aio-mastercontainer
+docker compose up -d --wait traefik traefik-plugins organizr lldap authelia crowdsec loki nextcloud-aio-mastercontainer
 docker compose up -d --wait grafana alloy
 docker compose up -d --wait whoami transmission jellyfin lampac tubesync syncthing
 docker compose up -d --wait portainer whatsupdocker glances scrutiny
