@@ -469,7 +469,7 @@ services:
       traefik.enable: true
       traefik.http.routers.syncthing.rule: Host(`sync.${HOST?}`)
 
-      traefik.http.routers.syncthing.middlewares: authelia@file,disable-app-iframe-security@file
+      traefik.http.routers.syncthing.middlewares: authelia@file
 
   gitlab:
     #? https://hub.docker.com/r/gitlab/gitlab-ce/tags?name=18.7

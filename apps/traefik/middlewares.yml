@@ -11,13 +11,9 @@ http:
         # stsIncludeSubdomains: true
         contentTypeNosniff: true
         browserXssFilter: true
-        contentSecurityPolicy: |
-          'self' frame-ancestors {{ env "HOST" }}
+        #! keep on a single line: a trailing newline makes the value invalid and Go silently drops the header on HTTP/2
+        contentSecurityPolicy: 'frame-ancestors ''self'' https://{{ env "HOST" }} https://www.{{ env "HOST" }}'
         referrerPolicy: "same-origin"
-    disable-app-iframe-security:
-      headers:
-        customResponseHeaders:
-          X-Frame-Options: ""
     gzip:
       compress: {}
     crowdsec:
