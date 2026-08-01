@@ -58,11 +58,11 @@ services:
       - /etc/localtime:/etc/localtime:ro
       - ${APPDATA_VOLUME?}/grafana/:/var/lib/grafana/
     environment:
-      - GF_PATHS_PROVISIONING=/etc/grafana/provisioning
-      - GF_AUTH_ANONYMOUS_ENABLED=true
-      - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
-      - GF_SERVER_ROOT_URL=https://logs.${HOST?}
-      - GF_SECURITY_ALLOW_EMBEDDING=true
+      GF_PATHS_PROVISIONING: /etc/grafana/provisioning
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_ANONYMOUS_ORG_ROLE: Admin
+      GF_SERVER_ROOT_URL: https://logs.${HOST?}
+      GF_SECURITY_ALLOW_EMBEDDING: "true"
     labels:
       logging: alloy
       traefik.enable: true
@@ -111,13 +111,13 @@ services:
     #   # For the web front-end
     #   - 17170:17170
     environment:
-      - LLDAP_HTTP_URL=https://lldap.${HOST?}
-      - LLDAP_LDAP_PORT=389
-      - LLDAP_LDAP_BASE_DN=${LDAP_HOST?}
-      - LLDAP_LDAP_USER_DN=${LDAP_BIND_ADMIN?}
-      - LLDAP_LDAP_USER_EMAIL=${HOST_EMAIL?}
-      - LLDAP_LDAP_USER_PASS=${LDAP_BIND_ADMIN_PASSWORD?}
-      - LLDAP_JWT_SECRET=${LDAP_SECRET?}
+      LLDAP_HTTP_URL: https://lldap.${HOST?}
+      LLDAP_LDAP_PORT: "389"
+      LLDAP_LDAP_BASE_DN: ${LDAP_HOST?}
+      LLDAP_LDAP_USER_DN: ${LDAP_BIND_ADMIN?}
+      LLDAP_LDAP_USER_EMAIL: ${HOST_EMAIL?}
+      LLDAP_LDAP_USER_PASS: ${LDAP_BIND_ADMIN_PASSWORD?}
+      LLDAP_JWT_SECRET: ${LDAP_SECRET?}
     env_file:
       - lscr.env
     labels:
@@ -155,15 +155,15 @@ services:
       - ./apps/authelia/configuration.yml:/config/configuration.yml:ro
       - ${APPDATA_VOLUME?}/authelia/:/config/
     environment:
-      - HOST=${HOST?}
-      - X_AUTHELIA_CONFIG_FILTERS=template
-      - AUTHELIA_IDENTITY_VALIDATION_RESET_PASSWORD_JWT_SECRET_FILE=/run/secrets/JWT_SECRET
-      - AUTHELIA_AUTHENTICATION_BACKEND_LDAP_PASSWORD_FILE=/run/secrets/AUTHENTICATION_BACKEND_LDAP_PASSWORD
-      - AUTHELIA_SESSION_SECRET_FILE=/run/secrets/SESSION_SECRET
-      - AUTHELIA_STORAGE_ENCRYPTION_KEY_FILE=/run/secrets/STORAGE_ENCRYPTION_KEY
-      - AUTHELIA_AUTHENTICATION_BACKEND_LDAP_BASE_DN=${LDAP_HOST?}
-      - AUTHELIA_AUTHENTICATION_BACKEND_LDAP_USER=uid=${LDAP_BIND_ADMIN?},ou=people,${LDAP_HOST?}
-      - AUTHELIA_ACCESS_CONTROL_DEFAULT_POLICY=${AUTHELIA_ACCESS_CONTROL_DEFAULT_POLICY?}
+      HOST: ${HOST?}
+      X_AUTHELIA_CONFIG_FILTERS: template
+      AUTHELIA_IDENTITY_VALIDATION_RESET_PASSWORD_JWT_SECRET_FILE: /run/secrets/JWT_SECRET
+      AUTHELIA_AUTHENTICATION_BACKEND_LDAP_PASSWORD_FILE: /run/secrets/AUTHENTICATION_BACKEND_LDAP_PASSWORD
+      AUTHELIA_SESSION_SECRET_FILE: /run/secrets/SESSION_SECRET
+      AUTHELIA_STORAGE_ENCRYPTION_KEY_FILE: /run/secrets/STORAGE_ENCRYPTION_KEY
+      AUTHELIA_AUTHENTICATION_BACKEND_LDAP_BASE_DN: ${LDAP_HOST?}
+      AUTHELIA_AUTHENTICATION_BACKEND_LDAP_USER: uid=${LDAP_BIND_ADMIN?},ou=people,${LDAP_HOST?}
+      AUTHELIA_ACCESS_CONTROL_DEFAULT_POLICY: ${AUTHELIA_ACCESS_CONTROL_DEFAULT_POLICY?}
     labels:
       logging: alloy
       traefik.enable: true
@@ -186,9 +186,9 @@ services:
     volumes:
       - ${APPDATA_VOLUME?}/traefik-plugins/:/plugins-local/
     environment:
-      - PLUGIN_MODULE=github.com/maxlerebourg/crowdsec-bouncer-traefik-plugin
+      PLUGIN_MODULE: github.com/maxlerebourg/crowdsec-bouncer-traefik-plugin
       #? https://plugins.traefik.io/plugins/6335346ca4caa9ddeffda116/crowdsec-bouncer-traefik-plugin
-      - PLUGIN_VERSION=v1.7.1
+      PLUGIN_VERSION: v1.7.1
     entrypoint:
       - /bin/sh
       - -euc
@@ -228,8 +228,8 @@ services:
       # crowdsec-bouncer plugin source (localPlugins), vendored by traefik-plugins init
       - ${APPDATA_VOLUME?}/traefik-plugins/:/plugins-local/:ro
     environment:
-      - HOST=${HOST?}
-      - BOUNCER_KEY_TRAEFIK=${BOUNCER_KEY_TRAEFIK?}
+      HOST: ${HOST?}
+      BOUNCER_KEY_TRAEFIK: ${BOUNCER_KEY_TRAEFIK?}
     env_file:
       - .provider.env
     labels:
@@ -300,7 +300,7 @@ services:
     # ports:
     #   - 8080:80
     environment:
-      - fpm=true # false by default
+      fpm: "true" # false by default
     env_file:
       - lscr.env
     labels:
@@ -323,11 +323,11 @@ services:
       - ${APPDATA_VOLUME?}/crowdsec/:/var/lib/crowdsec/data/
     environment:
       #this is the list of collections we want to install
-      - COLLECTIONS=crowdsecurity/sshd crowdsecurity/http-dos crowdsecurity/traefik LePresidente/authelia LePresidente/jellyfin
+      COLLECTIONS: crowdsecurity/sshd crowdsecurity/http-dos crowdsecurity/traefik LePresidente/authelia LePresidente/jellyfin
       # ? https://app.crowdsec.net/hub/author/crowdsecurity/collections/smb
       # ? https://app.crowdsec.net/hub/author/crowdsecurity/collections/nextcloud
       # ? timokoessler/gitlab gauth-fr/immich
-      - DISABLE_SCENARIOS=crowdsecurity/http-crawl-non_statics crowdsecurity/http-probing
+      DISABLE_SCENARIOS: crowdsecurity/http-crawl-non_statics crowdsecurity/http-probing
     env_file:
       - lscr.env
     labels:
@@ -351,25 +351,25 @@ services:
     #   - 8081:8080
     #   - 8443:8443 # Can be removed when running behind a web server or reverse proxy (like Apache, Nginx, Cloudflare Tunnel and else). See https://github.com/nextcloud/all-in-one/blob/main/reverse-proxy.md
     environment: # Is needed when using any of the options below
-      # - AIO_DISABLE_BACKUP_SECTION=false # Setting this to true allows to hide the backup section in the AIO interface. See https://github.com/nextcloud/all-in-one#how-to-disable-the-backup-section
-      - APACHE_PORT=11000 # Is needed when running behind a web server or reverse proxy (like Apache, Nginx, Cloudflare Tunnel and else). See https://github.com/nextcloud/all-in-one/blob/main/reverse-proxy.md
-      - APACHE_IP_BINDING=0.0.0.0 # Should be set when running behind a web server or reverse proxy (like Apache, Nginx, Cloudflare Tunnel and else) that is running on the same host. See https://github.com/nextcloud/all-in-one/blob/main/reverse-proxy.md
-      # - APACHE_IP_BINDING=127.0.0.1 # Should be set when running behind a web server or reverse proxy (like Apache, Nginx, Cloudflare Tunnel and else) that is running on the same host. See https://github.com/nextcloud/all-in-one/blob/main/reverse-proxy.md
-      # - BORG_RETENTION_POLICY=--keep-within=7d --keep-weekly=4 --keep-monthly=6 # Allows to adjust borgs retention policy. See https://github.com/nextcloud/all-in-one#how-to-adjust-borgs-retention-policy
-      # - COLLABORA_SECCOMP_DISABLED=false # Setting this to true allows to disable Collabora's Seccomp feature. See https://github.com/nextcloud/all-in-one#how-to-disable-collaboras-seccomp-feature
-      - NEXTCLOUD_DATADIR=${APPDATA_VOLUME?}/nextcloud/ # Allows to set the host directory for Nextcloud's datadir. ⚠️⚠️⚠️ Warning: do not set or adjust this value after the initial Nextcloud installation is done! See https://github.com/nextcloud/all-in-one#how-to-change-the-default-location-of-nextclouds-datadir
-      - NEXTCLOUD_MOUNT=${STORAGE_VOLUME?}/ # Allows the Nextcloud container to access the chosen directory on the host. See https://github.com/nextcloud/all-in-one#how-to-allow-the-nextcloud-container-to-access-directories-on-the-host
-      # - NEXTCLOUD_UPLOAD_LIMIT=10G # Can be adjusted if you need more. See https://github.com/nextcloud/all-in-one#how-to-adjust-the-upload-limit-for-nextcloud
-      # - NEXTCLOUD_MAX_TIME=3600 # Can be adjusted if you need more. See https://github.com/nextcloud/all-in-one#how-to-adjust-the-max-execution-time-for-nextcloud
-      # - NEXTCLOUD_MEMORY_LIMIT=512M # Can be adjusted if you need more. See https://github.com/nextcloud/all-in-one#how-to-adjust-the-php-memory-limit-for-nextcloud
-      # - NEXTCLOUD_TRUSTED_CACERTS_DIR=/path/to/my/cacerts # CA certificates in this directory will be trusted by the OS of the nexcloud container (Useful e.g. for LDAPS) See See https://github.com/nextcloud/all-in-one#how-to-trust-user-defined-certification-authorities-ca
-      # - NEXTCLOUD_STARTUP_APPS=deck twofactor_totp tasks calendar contacts notes # Allows to modify the Nextcloud apps that are installed on starting AIO the first time. See https://github.com/nextcloud/all-in-one#how-to-change-the-nextcloud-apps-that-are-installed-on-the-first-startup
-      # - NEXTCLOUD_ADDITIONAL_APKS=imagemagick # This allows to add additional packages to the Nextcloud container permanently. Default is imagemagick but can be overwritten by modifying this value. See https://github.com/nextcloud/all-in-one#how-to-add-os-packages-permanently-to-the-nextcloud-container
-      # - NEXTCLOUD_ADDITIONAL_PHP_EXTENSIONS=imagick # This allows to add additional php extensions to the Nextcloud container permanently. Default is imagick but can be overwritten by modifying this value. See https://github.com/nextcloud/all-in-one#how-to-add-php-extensions-permanently-to-the-nextcloud-container
-      # - NEXTCLOUD_ENABLE_DRI_DEVICE=true # This allows to enable the /dev/dri device in the Nextcloud container. ⚠️⚠️⚠️ Warning: this only works if the '/dev/dri' device is present on the host! If it should not exist on your host, don't set this to true as otherwise the Nextcloud container will fail to start! See https://github.com/nextcloud/all-in-one#how-to-enable-hardware-transcoding-for-nextcloud
-      # - NEXTCLOUD_KEEP_DISABLED_APPS=false # Setting this to true will keep Nextcloud apps that are disabled in the AIO interface and not uninstall them if they should be installed. See https://github.com/nextcloud/all-in-one#how-to-keep-disabled-apps
-      # - TALK_PORT=3478 # This allows to adjust the port that the talk container is using. See https://github.com/nextcloud/all-in-one#how-to-adjust-the-talk-port
-      # - WATCHTOWER_DOCKER_SOCKET_PATH=/var/run/docker.sock # Needs to be specified if the docker socket on the host is not located in the default '/var/run/docker.sock'. Otherwise mastercontainer updates will fail. For macos it needs to be '/var/run/docker.sock'
+      # AIO_DISABLE_BACKUP_SECTION: "false" # Setting this to true allows to hide the backup section in the AIO interface. See https://github.com/nextcloud/all-in-one#how-to-disable-the-backup-section
+      APACHE_PORT: "11000" # Is needed when running behind a web server or reverse proxy (like Apache, Nginx, Cloudflare Tunnel and else). See https://github.com/nextcloud/all-in-one/blob/main/reverse-proxy.md
+      APACHE_IP_BINDING: 0.0.0.0 # Should be set when running behind a web server or reverse proxy (like Apache, Nginx, Cloudflare Tunnel and else) that is running on the same host. See https://github.com/nextcloud/all-in-one/blob/main/reverse-proxy.md
+      # APACHE_IP_BINDING: 127.0.0.1 # Should be set when running behind a web server or reverse proxy (like Apache, Nginx, Cloudflare Tunnel and else) that is running on the same host. See https://github.com/nextcloud/all-in-one/blob/main/reverse-proxy.md
+      # BORG_RETENTION_POLICY: --keep-within=7d --keep-weekly=4 --keep-monthly=6 # Allows to adjust borgs retention policy. See https://github.com/nextcloud/all-in-one#how-to-adjust-borgs-retention-policy
+      # COLLABORA_SECCOMP_DISABLED: "false" # Setting this to true allows to disable Collabora's Seccomp feature. See https://github.com/nextcloud/all-in-one#how-to-disable-collaboras-seccomp-feature
+      NEXTCLOUD_DATADIR: ${APPDATA_VOLUME?}/nextcloud/ # Allows to set the host directory for Nextcloud's datadir. ⚠️⚠️⚠️ Warning: do not set or adjust this value after the initial Nextcloud installation is done! See https://github.com/nextcloud/all-in-one#how-to-change-the-default-location-of-nextclouds-datadir
+      NEXTCLOUD_MOUNT: ${STORAGE_VOLUME?}/ # Allows the Nextcloud container to access the chosen directory on the host. See https://github.com/nextcloud/all-in-one#how-to-allow-the-nextcloud-container-to-access-directories-on-the-host
+      # NEXTCLOUD_UPLOAD_LIMIT: 10G # Can be adjusted if you need more. See https://github.com/nextcloud/all-in-one#how-to-adjust-the-upload-limit-for-nextcloud
+      # NEXTCLOUD_MAX_TIME: "3600" # Can be adjusted if you need more. See https://github.com/nextcloud/all-in-one#how-to-adjust-the-max-execution-time-for-nextcloud
+      # NEXTCLOUD_MEMORY_LIMIT: 512M # Can be adjusted if you need more. See https://github.com/nextcloud/all-in-one#how-to-adjust-the-php-memory-limit-for-nextcloud
+      # NEXTCLOUD_TRUSTED_CACERTS_DIR: /path/to/my/cacerts # CA certificates in this directory will be trusted by the OS of the nexcloud container (Useful e.g. for LDAPS) See See https://github.com/nextcloud/all-in-one#how-to-trust-user-defined-certification-authorities-ca
+      # NEXTCLOUD_STARTUP_APPS: deck twofactor_totp tasks calendar contacts notes # Allows to modify the Nextcloud apps that are installed on starting AIO the first time. See https://github.com/nextcloud/all-in-one#how-to-change-the-nextcloud-apps-that-are-installed-on-the-first-startup
+      # NEXTCLOUD_ADDITIONAL_APKS: imagemagick # This allows to add additional packages to the Nextcloud container permanently. Default is imagemagick but can be overwritten by modifying this value. See https://github.com/nextcloud/all-in-one#how-to-add-os-packages-permanently-to-the-nextcloud-container
+      # NEXTCLOUD_ADDITIONAL_PHP_EXTENSIONS: imagick # This allows to add additional php extensions to the Nextcloud container permanently. Default is imagick but can be overwritten by modifying this value. See https://github.com/nextcloud/all-in-one#how-to-add-php-extensions-permanently-to-the-nextcloud-container
+      # NEXTCLOUD_ENABLE_DRI_DEVICE: "true" # This allows to enable the /dev/dri device in the Nextcloud container. ⚠️⚠️⚠️ Warning: this only works if the '/dev/dri' device is present on the host! If it should not exist on your host, don't set this to true as otherwise the Nextcloud container will fail to start! See https://github.com/nextcloud/all-in-one#how-to-enable-hardware-transcoding-for-nextcloud
+      # NEXTCLOUD_KEEP_DISABLED_APPS: "false" # Setting this to true will keep Nextcloud apps that are disabled in the AIO interface and not uninstall them if they should be installed. See https://github.com/nextcloud/all-in-one#how-to-keep-disabled-apps
+      # TALK_PORT: "3478" # This allows to adjust the port that the talk container is using. See https://github.com/nextcloud/all-in-one#how-to-adjust-the-talk-port
+      # WATCHTOWER_DOCKER_SOCKET_PATH: /var/run/docker.sock # Needs to be specified if the docker socket on the host is not located in the default '/var/run/docker.sock'. Otherwise mastercontainer updates will fail. For macos it needs to be '/var/run/docker.sock'
     # networks: # Is needed when you want to create the nextcloud-aio network with ipv6-support using this file, see the network config at the bottom of the file
     #   - nextcloud-aio # Is needed when you want to create the nextcloud-aio network with ipv6-support using this file, see the network config at the bottom of the file
     labels:
@@ -399,12 +399,12 @@ services:
     # https://github.com/linuxserver/docker-mods/tree/transmission-env-var-settings
     # https://github.com/linuxserver/docker-mods/tree/transmission-transmissionic
     environment:
-      - DOCKER_MODS=linuxserver/mods:transmission-env-var-settings|linuxserver/mods:transmission-transmissionic
-      - TRANSMISSION_WEB_HOME=/transmissionic/
-      # - TRANSMISSION_WEB_HOME=/transmission-web-control/
-      # - TRANSMISSION_WEB_HOME=/flood-for-transmission/
-      # - TRANSMISSION_ALT_SPEED_DOWN=2048
-      # - TRANSMISSION_ALT_SPEED_UP=256
+      DOCKER_MODS: linuxserver/mods:transmission-env-var-settings|linuxserver/mods:transmission-transmissionic
+      TRANSMISSION_WEB_HOME: /transmissionic/
+      # TRANSMISSION_WEB_HOME: /transmission-web-control/
+      # TRANSMISSION_WEB_HOME: /flood-for-transmission/
+      # TRANSMISSION_ALT_SPEED_DOWN: "2048"
+      # TRANSMISSION_ALT_SPEED_UP: "256"
     env_file:
       - lscr.env
     labels:
@@ -435,7 +435,7 @@ services:
       - ${STORAGE_VOLUME?}/downloads/media/movies/:/data/movies/
       - ${STORAGE_VOLUME?}/downloads/media/music/:/data/music/
     environment:
-      - JELLYFIN_PublishedServerUrl=${LAN_HOST?}
+      JELLYFIN_PublishedServerUrl: ${LAN_HOST?}
     env_file:
       - lscr.env
     labels:
@@ -640,8 +640,8 @@ services:
       - /etc/localtime:/etc/localtime:ro
       - /var/run/docker.sock:/var/run/docker.sock
     environment:
-      - WUD_TRIGGER_DOCKER_LOCAL_PRUNE=true
-      - WUD_TRIGGER_DOCKER_LOCAL_THRESHOLD=patch
+      WUD_TRIGGER_DOCKER_LOCAL_PRUNE: "true"
+      WUD_TRIGGER_DOCKER_LOCAL_THRESHOLD: patch
     labels:
       logging: alloy
       traefik.enable: true
@@ -659,7 +659,7 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - /etc/os-release:/etc/os-release:ro
     environment:
-      - GLANCES_OPT=-w
+      GLANCES_OPT: -w
     env_file:
       - lscr.env
     labels:
