@@ -393,116 +393,36 @@ services:
       traefik.http.routers.jellyfin.rule: Host(`media.${HOST?}`)
       traefik.http.services.jellyfin-nas.loadbalancer.server.port: 8096
 
-#endregion CLOUD
-
-#region Servarr
-  flaresolverr:
-    # https://hub.docker.com/r/flaresolverr/flaresolverr
-    image: ghcr.io/flaresolverr/flaresolverr:latest
-    container_name: flaresolverr
-    restart: unless-stopped
+  lampac:
+    image: ghcr.io/lampac-nextgen/lampac
+    container_name: lampac
     # ports:
-    #   - 8191:8191
-    # environment:
-    #   - LOG_LEVEL=info
-    #   - LOG_HTML=false
-    #   - CAPTCHA_SOLVER=none
-    volumes:
-      - /etc/localtime:/etc/localtime:ro
-    labels:
-      logging: alloy
-
-  prowlarr:
-    # https://hub.docker.com/r/linuxserver/prowlarr
-    image: lscr.io/linuxserver/prowlarr:latest
-    container_name: prowlarr
+    #   - 9118:9118
+    shm_size: 1024mb
     restart: unless-stopped
-    # ports:
-    #   - 9696:9696
-    healthcheck:
-      test: curl http://localhost:9696 || exit 1
-    env_file:
-      - lscr.env
+    #! configs here are SHIT
+    #? https://alcofuck.net/modules.html
+    #? https://github.com/lampac-nextgen/lampac/tree/main/Shared/Models/AppConf
+    #? https://github.com/search?q=repo%3Alampac-nextgen%2Flampac+public+class+ModuleConf&type=code
+    #! mkdir --parents $APPDATA_VOLUME/lampac
+    #! printf '%s' 'your_password' > $APPDATA_VOLUME/lampac/passwd
+    #! init.yaml is silently ignored by the image (verified: values never reach current.conf), json only
     volumes:
-      - /etc/localtime:/etc/localtime:ro
-      - ${APPDATA_VOLUME?}/prowlarr/:/config/
+      - ./apps/lampac/init.conf:/lampac/init.conf:ro
+      - ./apps/lampac/module/AdminPanel/manifest.json:/lampac/module/AdminPanel/manifest.json
+      - ./apps/lampac/module/WatchTogether/manifest.json:/lampac/module/WatchTogether/manifest.json
+      - ${APPDATA_VOLUME?}/lampac/passwd:/lampac/passwd:ro
+      - ${APPDATA_VOLUME?}/lampac/cache/:/lampac/cache/
+      - ${APPDATA_VOLUME?}/lampac/database/:/lampac/database/
+      - ${APPDATA_VOLUME?}/lampac/ts/:/lampac/data/ts/
+    devices: *gpu-devices
     labels:
       logging: alloy
       traefik.enable: true
-      traefik.http.routers.prowlarr.rule: Host(`prowlarr.${HOST?}`)
+      traefik.http.routers.lampac.rule: Host(`lampac.${HOST?}`)
 
-      traefik.http.routers.prowlarr.middlewares: authelia@file
-    depends_on:
-      - transmission
+      traefik.http.routers.lampac.middlewares: authelia@file
 
-  # lidarr:
-  #   # https://hub.docker.com/r/linuxserver/lidarr
-  #   image: lscr.io/linuxserver/lidarr:latest
-  #   container_name: lidarr
-  #   restart: unless-stopped
-  #   # ports:
-  #   #   - 8686:8686
-  #   env_file:
-  #     - lscr.env
-  #   volumes:
-  #     - /etc/localtime:/etc/localtime:ro
-  #     - ${APPDATA_VOLUME?}/lidarr/:/config/
-  #     - ${STORAGE_VOLUME?}/downloads/:/downloads/
-  #   labels:
-  #     logging: alloy
-  #     traefik.enable: true
-  #     traefik.http.routers.lidarr.rule: Host(`lidarr.${HOST?}`)
-
-  #     traefik.http.routers.lidarr.middlewares: authelia@file
-  #   depends_on:
-  #     - prowlarr
-
-  radarr:
-    # https://hub.docker.com/r/linuxserver/radarr
-    image: lscr.io/linuxserver/radarr:latest
-    container_name: radarr
-    restart: unless-stopped
-    # ports:
-    #   - 7878:7878
-    env_file:
-      - lscr.env
-    volumes:
-      - /etc/localtime:/etc/localtime:ro
-      - ${APPDATA_VOLUME?}/radarr/:/config/
-      - ${STORAGE_VOLUME?}/downloads/:/downloads/
-    labels:
-      logging: alloy
-      traefik.enable: true
-      traefik.http.routers.radarr.rule: Host(`radarr.${HOST?}`)
-
-      traefik.http.routers.radarr.middlewares: authelia@file
-    depends_on:
-      - prowlarr
-
-  sonarr:
-    # https://hub.docker.com/r/linuxserver/sonarr
-    image: lscr.io/linuxserver/sonarr:latest
-    container_name: sonarr
-    restart: unless-stopped
-    # ports:
-    #   - 8989:8989
-    env_file:
-      - lscr.env
-    volumes:
-      - /etc/localtime:/etc/localtime:ro
-      - ${APPDATA_VOLUME?}/sonarr/:/config/
-      - ${STORAGE_VOLUME?}/downloads/:/downloads/
-    labels:
-      logging: alloy
-      traefik.enable: true
-      traefik.http.routers.sonarr.rule: Host(`sonarr.${HOST?}`)
-
-      traefik.http.routers.sonarr.middlewares: authelia@file
-    depends_on:
-      - prowlarr
-#endregion Servarr
-
-#region CLOUD
   tubesync:
     # https://github.com/meeb/tubesync
     image: ghcr.io/meeb/tubesync:latest

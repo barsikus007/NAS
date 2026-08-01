@@ -1,0 +1,9 @@
+{
+  "enable": true,
+  "dynamic": true,
+  "tree": [
+    "AdminPanelController.cs",
+    "ConfigSectionGroups.cs",
+    "ModInit.cs"
+  ]
+}

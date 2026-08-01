@@ -55,8 +55,6 @@
       - [TODO](https://github.com/lldap/lldap/blob/main/example_configs/jellyfin.md)
     - `/networking.html` Allow remote connections to this server
   - TODO Add Media Libraries
-- *arr
-  - TODO
 
 ## Attack surface
 
@@ -91,9 +89,7 @@
   - `${STORAGE_VOLUME}/downloads/`
     - `${STORAGE_VOLUME}/downloads/{,in}complete` for downloads
     - `${STORAGE_VOLUME}/downloads/torrents` for torrent files
-    - `${STORAGE_VOLUME}/downloads/media` for *arrs and jellyfin media
-- Lidarr disabled due to unusable use case for me
-  - If you need album release software, then uncomment `services.lidarr` section in `compose.yaml`
+    - `${STORAGE_VOLUME}/downloads/media` for jellyfin managed media
 - Transmission alt speed enabled due to broken pcie on rock-3a to reduce overload
 - Target of this build is AMD64
   - It was ARM64 before, but I fucked enough with my rock-3a
@@ -120,12 +116,9 @@
     - `{$APPDATA_VOLUME}/` patcher with `.env` values
   - organizr SSO ?
   - healthchecks ?
-    - flaresolverr
     - glances
     - portainer
-    - radarr
     - scrutiny
-    - sonarr
     - traefik
     - whoami
 - alternate software
@@ -135,7 +128,6 @@
 - new software
   - <https://github.com/ramanlabs-in/hachi>
     - probably, on client with webdav
-  - <https://github.com/fallenbagel/jellyseerr>
 - software late
   - VPN (wireguard)
     - inner
