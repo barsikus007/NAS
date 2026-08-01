@@ -9,7 +9,7 @@
     ],
     "settings": {
         "search.exclude": {
-            "/tank/apps/": true
+            "/tank/apps/": true,
         },
         "terminal.integrated.cwd": "${fileWorkspaceFolder}",
     },

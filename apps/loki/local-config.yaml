@@ -42,6 +42,10 @@ analytics:
  reporting_enabled: false
 
 
+#? powers the Patterns tab in Grafana Logs Drilldown, off by default
+pattern_ingester:
+  enabled: true
+
 limits_config:
   max_query_lookback: 1w
   retention_period: 1w
