@@ -89,6 +89,12 @@ session:
       # expiration: 1h
       # inactivity: 5m
 
+  # persist sessions in redis so they survive authelia restarts/reboots
+  # (default in-memory provider drops all sessions on restart -> forces re-login)
+  redis:
+    host: authelia-redis
+    port: 6379
+
 storage:
   ##encryption_key: you_must_generate_a_random_string_of_more_than_twenty_chars_and_configure_this
   local:

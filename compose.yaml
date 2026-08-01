@@ -125,6 +125,21 @@ services:
 
       traefik.http.routers.lldap.middlewares: authelia@file
 
+  # persistent session store so authelia keeps sessions across reboots
+  authelia-redis:
+    image: docker.io/valkey/valkey:9
+    container_name: authelia-redis
+    restart: unless-stopped
+    # enable AOF + RDB so sessions survive container/host restarts
+    command: valkey-server --appendonly yes --save "60 1"
+    healthcheck:
+      test: valkey-cli ping || exit 1
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ${APPDATA_VOLUME?}/authelia-redis/:/data/
+    labels:
+      logging: alloy
+
   authelia:
     image: authelia/authelia:4.39
     container_name: authelia
@@ -150,6 +165,7 @@ services:
       traefik.http.routers.authelia.rule: Host(`auth.${HOST?}`)
     depends_on:
       - lldap
+      - authelia-redis
 
   #! vibefix for https://github.com/traefik/traefik/issues/13005
   # one-shot: vendor the crowdsec-bouncer plugin into a volume so traefik uses
