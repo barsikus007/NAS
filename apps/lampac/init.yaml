@@ -1,0 +1,33 @@
+#? defaults: https://github.com/lampac-nextgen/lampac/blob/main/config/base.conf
+cub:
+  domain: cub.rip
+accsdb:
+  enable: true
+BaseModule:
+  #? excluding TelegramAuth* which is skipped by default
+  SkipModules:
+    - Catalog
+    - Tracks
+    - Transcoding
+    - WebLog
+    - CacheMedia
+    - ForkPlayerXML
+    - MsxNative
+    - Potok
+LampaWeb:
+  initPlugins:
+    watch_together: true
+gst:
+  enable: true
+TelegramAuth:
+  enable: true
+  # mutations_api_secret: SAME_AS_TelegramAuthBot.mutations_api_secret
+  # owner_telegram_ids:
+  #   - 123456789
+  auto_provision_users: true
+  max_active_devices_per_user: 5 # 0 by default
+TelegramAuthBot:
+  enable: true
+  # bot_token: PASTE_YOUR_TELEGRAM_BOT_TOKEN_HERE
+  # mutations_api_secret: SAME_AS_TelegramAuth.mutations_api_secret
+  service_display_name: Хуямпа

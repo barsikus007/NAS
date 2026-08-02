@@ -456,17 +456,33 @@ services:
     image: ghcr.io/lampac-nextgen/lampac
     restart: unless-stopped
     #! configs here are SHIT
-    #? https://alcofuck.net/modules.html
-    #? https://github.com/lampac-nextgen/lampac/tree/main/Shared/Models/AppConf
-    #? https://github.com/search?q=repo%3Alampac-nextgen%2Flampac+public+class+ModuleConf&type=code
-    #! mkdir --parents $APPDATA_VOLUME/lampac
-    #! printf '%s' 'your_password' > $APPDATA_VOLUME/lampac/passwd
-    #! init.yaml is silently ignored by the image (verified: values never reach current.conf), json only
+    #! https://alcofuck.net/modules.html
+    #! https://github.com/lampac-nextgen/lampac/tree/main/Shared/Models/AppConf
+    #! https://github.com/search?q=repo%3Alampac-nextgen%2Flampac+public+class+ModuleConf&type=code
+    #? mkdir --parents $APPDATA_VOLUME/lampac/module/LampaWeb/plugins
+    #? printf '%s' 'your_password' > $APPDATA_VOLUME/lampac/passwd
+    #? touch $APPDATA_VOLUME/lampac/module/LampaWeb/plugins/telegram_auth_gate.js
+    #! then paste edited https://github.com/lampac-nextgen/lampac/blob/main/Modules/LampaWeb/plugins/telegram_auth_gate.js
     volumes:
-      - ./apps/lampac/init.conf:/lampac/init.conf:ro
-      - ./apps/lampac/module/AdminPanel/manifest.json:/lampac/module/AdminPanel/manifest.json
-      - ./apps/lampac/module/WatchTogether/manifest.json:/lampac/module/WatchTogether/manifest.json
+      #! upstream has no way to split secrets out of init.conf
+      #! init.yaml is silently ignored by the image (verified: values never reach current.conf), json only
+      #? yq-go:
+      #? source .env
+      #? touch $APPDATA_VOLUME/lampac/init.json
+      #! and edit it
+      #? yq eval-all '. as $item ireduce ({}; . * $item)' --input-format=yaml "./apps/lampac/init.yaml" "$APPDATA_VOLUME/lampac/init.json" --output-format=json > "$APPDATA_VOLUME/lampac/init.conf"
+      - ${APPDATA_VOLUME?}/lampac/init.conf:/lampac/init.conf
+
+      - ./apps/lampac/module/AdminPanel/manifest.json:/lampac/module/AdminPanel/manifest.json:ro
+      - ./apps/lampac/module/WatchTogether/manifest.json:/lampac/module/WatchTogether/manifest.json:ro
+      - ./apps/lampac/module/TelegramAuth/manifest.json:/lampac/module/Community/TelegramAuth/manifest.json:ro
+      - ./apps/lampac/module/TelegramAuth/Controllers/TelegramAuthController.cs:/lampac/module/Community/TelegramAuth/Controllers/TelegramAuthController.cs:ro
+      - ./apps/lampac/module/TelegramAuthBot/manifest.json:/lampac/module/Community/TelegramAuthBot/manifest.json:ro
+      #! deny.js is the accsdb gate injected into lampainit.js; replaced with the telegram variant
+      - ${APPDATA_VOLUME?}/lampac/module/LampaWeb/plugins/telegram_auth_gate.js:/lampac/module/LampaWeb/plugins/deny.js:ro
       - ${APPDATA_VOLUME?}/lampac/passwd:/lampac/passwd:ro
+      #! accsdb users live here, not in the repo: the file holds their passwords
+      - ${APPDATA_VOLUME?}/lampac/users.json:/lampac/users.json
       - ${APPDATA_VOLUME?}/lampac/cache/:/lampac/cache/
       - ${APPDATA_VOLUME?}/lampac/database/:/lampac/database/
       - ${APPDATA_VOLUME?}/lampac/ts/:/lampac/data/ts/
@@ -474,8 +490,6 @@ services:
       logging: alloy
       traefik.enable: true
       traefik.http.routers.lampac.rule: Host(`lampac.${HOST?}`)
-
-      traefik.http.routers.lampac.middlewares: authelia@file
     devices: *gpu-devices
     # ports:
     #   - 9118:9118
