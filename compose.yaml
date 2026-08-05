@@ -476,7 +476,6 @@ services:
       - ./apps/lampac/module/AdminPanel/manifest.json:/lampac/module/AdminPanel/manifest.json:ro
       - ./apps/lampac/module/WatchTogether/manifest.json:/lampac/module/WatchTogether/manifest.json:ro
       - ./apps/lampac/module/TelegramAuth/manifest.json:/lampac/module/Community/TelegramAuth/manifest.json:ro
-      - ./apps/lampac/module/TelegramAuth/Controllers/TelegramAuthController.cs:/lampac/module/Community/TelegramAuth/Controllers/TelegramAuthController.cs:ro
       - ./apps/lampac/module/TelegramAuthBot/manifest.json:/lampac/module/Community/TelegramAuthBot/manifest.json:ro
       #! deny.js is the accsdb gate injected into lampainit.js; replaced with the telegram variant
       - ${APPDATA_VOLUME?}/lampac/module/LampaWeb/plugins/telegram_auth_gate.js:/lampac/module/LampaWeb/plugins/deny.js:ro
