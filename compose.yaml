@@ -602,6 +602,7 @@ services:
     # image: lscr.io/linuxserver/firefox:latest
     container_name: browser
     image: lscr.io/linuxserver/chromium:latest
+    restart: unless-stopped
     volumes:
       - /etc/localtime:/etc/localtime:ro
     # security_opt:
@@ -790,13 +791,32 @@ services:
       traefik.enable: true
       traefik.http.routers.notes.rule: Host(`notes.${HOST?}`)
       # traefik.http.routers.notes.middlewares: authelia@file
-      #endregion Other
-
     command:
       - /bin/sh
       - -c
       - >
         sed -i '/npm audit fix/d' /usr/src/app/scripts/bootstrap.sh && chmod +x /usr/src/app/scripts/bootstrap.sh && /usr/src/app/scripts/bootstrap.sh
+  #endregion Other
+
+  #region IOT
+  home-assistant:
+    container_name: home-assistant
+    image: ghcr.io/home-assistant/home-assistant:stable
+    restart: unless-stopped
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ${APPDATA_VOLUME?}/home-assistant/:/config/
+      - /run/dbus:/run/dbus:ro
+    #? http://nas.lan:8123/config/network -> Internet: enter host; add Trusted proxies for 172.16.0.0/12
+    # ports:
+    #   - 8123:8123
+    labels:
+      logging: alloy
+      traefik.enable: true
+      traefik.http.routers.home-assistant.rule: Host(`home.${HOST?}`)
+      traefik.http.services.home-assistant.loadbalancer.server.port: 8123
+      # reverse proxy requires http.use_x_forwarded_for and http.trusted_proxies in configuration.yaml
+  #endregion IOT
 
 volumes:
   nextcloud_aio_mastercontainer:
