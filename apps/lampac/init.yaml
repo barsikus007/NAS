@@ -1,6 +1,6 @@
 #? defaults: https://github.com/lampac-nextgen/lampac/blob/main/config/base.conf
 cub:
-  domain: cub.rip
+  domain: cub.red
 accsdb:
   enable: true
 BaseModule:
